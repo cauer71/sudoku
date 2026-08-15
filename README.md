@@ -31,7 +31,19 @@ open index.html
 - **Tastatursteuerung** komplett: Pfeiltasten, 1–9, Umschalt+Ziffer für Notizen,
   N, H, Strg+Z, Leertaste
 - **Spielstand** wird lokal gesichert und beim nächsten Aufruf fortgesetzt
-- Helles und dunkles Erscheinungsbild, ab 320 px Breite bedienbar
+- Helles und dunkles Erscheinungsbild
+
+## Am Handy
+
+Hoch- wie Querformat passen vollständig in eine Bildschirmhöhe — es wird nicht
+gescrollt. Im Hochformat stehen die Ziffern 1–9 als durchgehende Reihe unter dem
+Brett, im Querformat wandert das Bedienteil als 3×3-Feld neben das Gitter.
+Schwierigkeitswahl, Einstellungen und Hilfe liegen hinter dem Menü und fahren
+als Blatt von unten ein.
+
+Die Brettgröße wird zur Laufzeit aus der freien Fläche berechnet und bei
+Drehung, Größenänderung und ein-/ausfahrender Browserleiste nachgeführt.
+Geprüft von 320×480 bis 430×790 sowie im Querformat.
 
 ## Aufbau
 
