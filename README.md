@@ -20,10 +20,13 @@ open index.html
 
   | Grad | Vorgaben | Bedingung |
   |---|---|---|
-  | Leicht | ~45 | allein mit nackten Einern lösbar, punktsymmetrisch |
-  | Mittel | ~36 | mit nackten und versteckten Einern lösbar, punktsymmetrisch |
+  | Leicht | ~45 | allein mit nackten Einern lösbar |
+  | Mittel | ~36 | mit nackten und versteckten Einern lösbar |
   | Schwer | ~30 | nackte Einer reichen nicht |
   | Experte | ~25 | Einer-Techniken reichen nicht |
+
+  Die Zahlen werden einzeln in zufälliger Reihenfolge entfernt — ohne
+  Symmetrievorgabe, damit das Vorgabenmuster keine erkennbare Struktur hat.
 
 - **Notizen** (Kandidaten) mit automatischer Bereinigung in Zeile, Spalte und Block
 - **Rückgängig/Wiederholen** über die gesamte Partie, inklusive Fehler- und Tippzähler

@@ -1174,12 +1174,14 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   }
 
   var DIFFS = {
-    leicht:  { label: "Leicht",  clues: 45, sym: true,  passes: 1, accept: function (p) { return solvableBySingles(p, false); } },
-    mittel:  { label: "Mittel",  clues: 36, sym: true,  passes: 1, accept: function (p) { return solvableBySingles(p, true); } },
-    schwer:  { label: "Schwer",  clues: 30, sym: false, passes: 2, accept: function (p) { return !solvableBySingles(p, false); } },
-    experte: { label: "Experte", clues: 25, sym: false, passes: 2, accept: function (p) { return !solvableBySingles(p, true); } }
+    leicht:  { label: "Leicht",  clues: 45, passes: 1, accept: function (p) { return solvableBySingles(p, false); } },
+    mittel:  { label: "Mittel",  clues: 36, passes: 1, accept: function (p) { return solvableBySingles(p, true); } },
+    schwer:  { label: "Schwer",  clues: 30, passes: 2, accept: function (p) { return !solvableBySingles(p, false); } },
+    experte: { label: "Experte", clues: 25, passes: 2, accept: function (p) { return !solvableBySingles(p, true); } }
   };
 
+  // Zahlen werden einzeln in zufälliger Reihenfolge entfernt — bewusst ohne
+  // Symmetrievorgabe, damit das Vorgabenmuster keine erkennbare Struktur hat.
   function carve(sol, cfg) {
     var puz = sol.slice();
     var clues = 81;
@@ -1187,17 +1189,14 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
       var order = shuffle(Array.from({ length: 81 }, function (_, i) { return i; }));
       for (var k = 0; k < order.length; k++) {
         if (clues <= cfg.clues) break;
-        var i = order[k], j = 80 - i;
-        var group = (cfg.sym && j !== i) ? [i, j] : [i];
-        var t, skip = false;
-        for (t = 0; t < group.length; t++) if (puz[group[t]] === 0) skip = true;
-        if (skip) continue;
-        var saved = group.map(function (c) { return puz[c]; });
-        for (t = 0; t < group.length; t++) puz[group[t]] = 0;
+        var i = order[k];
+        if (puz[i] === 0) continue;
+        var saved = puz[i];
+        puz[i] = 0;
         if (countSolutions(puz, 2) !== 1) {
-          for (t = 0; t < group.length; t++) puz[group[t]] = saved[t];
+          puz[i] = saved;
         } else {
-          clues -= group.length;
+          clues--;
         }
       }
     }
