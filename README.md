@@ -10,6 +10,32 @@ Browser öffnen, fertig.
 open index.html
 ```
 
+Gehostet: **https://cauer71.github.io/sudoku/**
+
+## Installieren
+
+Die gehostete Fassung ist eine installierbare Web-App und läuft danach offline
+und ohne Browserleisten, mit eigenem Icon auf dem Startbildschirm.
+
+- **iPhone/iPad (Safari):** Teilen-Symbol → *Zum Home-Bildschirm*
+- **Android (Chrome):** Menü ⋮ → *App installieren* (oder der Hinweis, der von
+  selbst erscheint)
+- **Desktop (Chrome/Edge):** Installieren-Symbol in der Adressleiste
+
+Dazu gehören `manifest.webmanifest`, der Service Worker `sw.js` (macht die App
+offline verfügbar) und die Icons unter `icons/`. Die Farbe der Systemleisten
+folgt zur Laufzeit dem Papiergrund, also hell/dunkel und dem Julia-Modus.
+
+Das Icon zeigt dasselbe Motiv wie das Spiel: ein 3×3-Gitter mit einem
+hervorgehobenen Feld, in `#2b5db0` und `#d9e2ff` aus der M3-Palette. Es liegt in
+192, 512 (`any`), 512 (`maskable`, Inhalt innerhalb der mittleren 80 % für die
+Adaptivformen von Android), 180 für iOS sowie 32 und 16 als Favicon vor.
+
+> Die Artefakt-Veröffentlichung ist eine einzelne HTML-Seite und kann keine
+> Manifest-, Icon- und Worker-Dateien mitbringen; installierbar ist deshalb nur
+> die gehostete Fassung. Der Bauschritt für das Artefakt entfernt die
+> PWA-Verknüpfungen, was zugleich die Worker-Anmeldung abschaltet.
+
 ## Gestaltung
 
 Umsetzung der Variante **1c „Kompakt"** aus dem Design-Projekt
@@ -104,8 +130,12 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 ## Aufbau
 
-Alles liegt in `index.html`: Farb- und Formwerte samt Layout im `<style>`-Block,
-Löser, Erzeuger und Spiellogik im abschließenden `<script>`-Block.
+| Datei | Inhalt |
+|---|---|
+| `index.html` | alles zum Spiel: Farb- und Formwerte samt Layout im `<style>`-Block, Löser, Erzeuger und Spiellogik im `<script>`-Block |
+| `manifest.webmanifest` | Name, Icons, Startadresse, Vollbild-Betrieb |
+| `sw.js` | Service Worker: Seitenaufrufe erst Netz dann Cache, übrige Dateien erst Cache dann Netz |
+| `icons/` | sechs PNG-Größen für iOS, Android und Favicon |
 
 `Sudoku Webapp Redesign.zip` ist die Design-Vorlage, aus der diese Fassung
 entstanden ist.

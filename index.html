@@ -4,6 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sudoku</title>
+<meta name="description" content="Klassisches Zahlengitter mit vier Schwierigkeitsgraden — jedes Rätsel wird neu erzeugt und ist eindeutig lösbar.">
+
+<!-- Als Web-App installierbar. Der Wert von theme-color wird zur Laufzeit
+     auf den Papiergrund gesetzt, damit er hell/dunkel und dem Julia-Modus
+     folgt. Die manifest-Verknüpfung ist zugleich der Schalter für die
+     Service-Worker-Anmeldung: fehlt sie (Einzeldatei-Betrieb), wird nichts
+     angemeldet. -->
+<meta name="theme-color" content="#dfe4ee">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sudoku">
 <style>
 /* ============================================================
    Sudoku — Material 3 Expressive, Variante „Kompakt" (1c)
@@ -219,6 +235,8 @@ body {
   overflow: hidden;
   position: relative;
   outline: none;
+  /* Im installierten Betrieb liegt die Statusleiste über der Seite */
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Trägt Kopfzeile, Kennzahlen und Bühne. Muss Flex-Container sein, damit
@@ -1127,11 +1145,23 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   var settings = { check: true, clean: true, same: true, julia: false };
 
   // Julia-Modus schaltet die Rosé-Palette am Wurzelelement ein. Bewusst dort
-  // und nicht an .app, damit auch der Seitengrund von <body> mitwechselt.
+  // und nicht an .app, damit der Seitengrund des Dokuments mitwechselt.
   function applyMode() {
     if (settings.julia) document.documentElement.setAttribute("data-mode", "julia");
     else document.documentElement.removeAttribute("data-mode");
+    applyThemeColor();
   }
+
+  // Farbe der Systemleisten im installierten Betrieb: immer der aktuelle
+  // Papiergrund, also passend zu hell/dunkel und zum Julia-Modus.
+  var themeMeta = document.querySelector('meta[name="theme-color"]');
+  function applyThemeColor() {
+    if (!themeMeta) return;
+    var paper = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim();
+    if (paper) themeMeta.setAttribute("content", paper);
+  }
+  var mqDark = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mqDark.addEventListener) mqDark.addEventListener("change", applyThemeColor);
 
   /* ==========================================================
      Aufbau
@@ -1910,6 +1940,21 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 
   scheduleFit();
   window.addEventListener("beforeunload", save);
+
+  /* ==========================================================
+     Installierbarkeit
+     ========================================================== */
+
+  // Nur anmelden, wenn ein Manifest verknüpft ist — im Einzeldatei-Betrieb
+  // (z. B. als Artefakt oder lokal per file://) gibt es keinen Worker, und
+  // ein vergeblicher Versuch würde nur einen Fehler in der Konsole hinterlassen.
+  if ("serviceWorker" in navigator &&
+      document.querySelector('link[rel="manifest"]') &&
+      location.protocol.indexOf("http") === 0) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () { /* nicht verfügbar — Spiel läuft trotzdem */ });
+    });
+  }
 })();
 </script>
 
