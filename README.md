@@ -35,6 +35,26 @@ Zusätzlich: Die Vorlage setzt die Palette per JavaScript aus
 hell / dunkel / Systemvorgabe, damit die Darstellung auch dann stimmt, wenn die
 Umgebung ein Theme am Wurzelelement vorgibt.
 
+## Julia-Modus
+
+In den Einstellungen lässt sich der **Julia-Modus** einschalten: dasselbe Spiel
+in Rosé. Die Akzentfarben sind nicht erfunden, sondern die in der Vorlage
+angelegte, dort aber ungenutzte `tertiary`-Rolle — unverändert auf die
+`primary`-Rollen gelegt:
+
+| Rolle | hell | dunkel |
+|---|---|---|
+| `primary` ← `tertiary` | `#725572` | `#e0bbdd` |
+| `primary-container` ← `tertiary-container` | `#fdd7fa` | `#593d5a` |
+
+Ergänzt sind nur die Neutraltöne und der Papiergrund, im selben Farbton (~300°).
+Weil `tertiary` weit vom Rot des Fehlerzustands entfernt liegt, bleiben gewählte
+und falsche Zelle klar unterscheidbar (ΔE 20 hell, 63 dunkel). Alle
+Text-auf-Fläche-Paare erreichen mindestens WCAG AA (4,5:1; Notizen 3:1).
+
+Die Einstellung wird lokal gespeichert und gilt in Hell wie Dunkel. Umgesetzt
+über `data-mode="julia"` am Wurzelelement, damit auch der Seitengrund mitwechselt.
+
 ## Aufbau der Oberfläche
 
 Kopfzeile mit Pause und Menü · drei Kennzahlen-Pillen (Zeit, Fehler, Grad) ·

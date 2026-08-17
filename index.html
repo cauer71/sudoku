@@ -103,6 +103,96 @@
   --sheet-shadow: 0 -8px 32px rgba(0, 0, 0, .5);
 }
 
+/* ============================================================
+   Julia-Modus — dieselbe M3-Struktur in Rosé.
+
+   Die Akzentfarben sind NICHT erfunden: sie sind die in der Vorlage
+   angelegte, aber ungenutzte tertiary-Rolle, hier unverändert auf
+   die primary-Rollen gelegt. Nur die Neutraltöne und der
+   Papiergrund sind ergänzt — im selben Farbton (~300°).
+
+   Angenehmer Nebeneffekt: tertiary liegt weit vom Rot des
+   Fehlerzustands entfernt, gewählte und falsche Zelle bleiben also
+   klar unterscheidbar.
+
+   Muss NACH den Grundpaletten stehen: die Auswahl läuft über die
+   höhere Spezifität von [data-mode="julia"], und der dunkle
+   Julia-Block überschreibt beide vorherigen Zustände.
+   ============================================================ */
+
+:root[data-mode="julia"] {
+  color-scheme: light;
+  /* aus der Vorlage: tertiary / on-tertiary / tertiary-container / on-tertiary-container */
+  --primary: #725572;            --on-primary: #ffffff;
+  --primary-container: #fdd7fa;  --on-primary-container: #2a132c;
+  /* im selben Farbton ergänzt */
+  --secondary: #6b586a;          --on-secondary: #ffffff;
+  --secondary-container: #f4dcf1; --on-secondary-container: #251a25;
+  --error: #ba1a1a;              --on-error: #ffffff;
+  --error-container: #ffdad6;     --on-error-container: #410002;
+  --surface: #fff7fb;            --on-surface: #1e1a1e;
+  --surface-variant: #eddee9;    --on-surface-variant: #4c444c;
+  --outline: #7e747d;            --outline-variant: #cfc3ce;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #fbf0f7;
+  --surface-container: #f7ebf3;
+  --surface-container-high: #f2e5ee;
+  --surface-container-highest: #ecdfe8;
+  --success: #146b4e;
+  --paper: #eedcea;
+  --grid-line: rgba(70, 40, 70, .06);
+  --scrim: rgba(35, 15, 35, .42);
+  --sheet-shadow: 0 -8px 32px rgba(55, 25, 55, .22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-mode="julia"]:not([data-theme="light"]) {
+    color-scheme: dark;
+    --primary: #e0bbdd;            --on-primary: #412742;
+    --primary-container: #593d5a;  --on-primary-container: #fdd7fa;
+    --secondary: #d7bfd4;          --on-secondary: #3b2b3a;
+    --secondary-container: #524151; --on-secondary-container: #f4dcf1;
+    --error: #ffb4ab;              --on-error: #690005;
+    --error-container: #93000a;     --on-error-container: #ffdad6;
+    --surface: #171216;            --on-surface: #eadfe7;
+    --surface-variant: #4c444c;    --on-surface-variant: #cfc3ce;
+    --outline: #988e97;            --outline-variant: #4c444c;
+    --surface-container-lowest: #110c10;
+    --surface-container-low: #1f1a1e;
+    --surface-container: #231d22;
+    --surface-container-high: #2e272d;
+    --surface-container-highest: #393138;
+    --success: #8bd6b0;
+    --paper: #150f14;
+    --grid-line: rgba(240, 200, 235, .05);
+    --scrim: rgba(0, 0, 0, .55);
+    --sheet-shadow: 0 -8px 32px rgba(0, 0, 0, .5);
+  }
+}
+
+:root[data-theme="dark"][data-mode="julia"] {
+  color-scheme: dark;
+  --primary: #e0bbdd;            --on-primary: #412742;
+  --primary-container: #593d5a;  --on-primary-container: #fdd7fa;
+  --secondary: #d7bfd4;          --on-secondary: #3b2b3a;
+  --secondary-container: #524151; --on-secondary-container: #f4dcf1;
+  --error: #ffb4ab;              --on-error: #690005;
+  --error-container: #93000a;     --on-error-container: #ffdad6;
+  --surface: #171216;            --on-surface: #eadfe7;
+  --surface-variant: #4c444c;    --on-surface-variant: #cfc3ce;
+  --outline: #988e97;            --outline-variant: #4c444c;
+  --surface-container-lowest: #110c10;
+  --surface-container-low: #1f1a1e;
+  --surface-container: #231d22;
+  --surface-container-high: #2e272d;
+  --surface-container-highest: #393138;
+  --success: #8bd6b0;
+  --paper: #150f14;
+  --grid-line: rgba(240, 200, 235, .05);
+  --scrim: rgba(0, 0, 0, .55);
+  --sheet-shadow: 0 -8px 32px rgba(0, 0, 0, .5);
+}
+
 /* ---------- Grundlage ---------- */
 
 html, body { height: 100%; }
@@ -592,6 +682,8 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   cursor: pointer;
 }
 .switch-row input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch-hint { color: var(--on-surface-variant); font-size: 13px; }
+.switch-hint::before { content: "· "; }
 .track {
   position: relative;
   flex: none;
@@ -753,6 +845,7 @@ svg.icon .fill { fill: currentColor; stroke: none; }
         <label class="switch-row"><span>Falsche Eingaben sofort markieren</span><input type="checkbox" id="setCheck" checked><span class="track"></span></label>
         <label class="switch-row"><span>Notizen automatisch bereinigen</span><input type="checkbox" id="setClean" checked><span class="track"></span></label>
         <label class="switch-row"><span>Gleiche Zahlen hervorheben</span><input type="checkbox" id="setSame" checked><span class="track"></span></label>
+        <label class="switch-row"><span>Julia-Modus <span class="switch-hint">rosa Farben</span></span><input type="checkbox" id="setJulia"><span class="track"></span></label>
       </div>
 
       <div class="sheet-group sheet-divider">
@@ -1031,7 +1124,14 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   var paused = false, won = false, busy = false;
   var notesMode = false;
   var best = {};
-  var settings = { check: true, clean: true, same: true };
+  var settings = { check: true, clean: true, same: true, julia: false };
+
+  // Julia-Modus schaltet die Rosé-Palette am Wurzelelement ein. Bewusst dort
+  // und nicht an .app, damit auch der Seitengrund von <body> mitwechselt.
+  function applyMode() {
+    if (settings.julia) document.documentElement.setAttribute("data-mode", "julia");
+    else document.documentElement.removeAttribute("data-mode");
+  }
 
   /* ==========================================================
      Aufbau
@@ -1179,7 +1279,7 @@ svg.icon .fill { fill: currentColor; stroke: none; }
       var s = localStorage.getItem(STORE + ".settings");
       if (s) {
         var p = JSON.parse(s) || {};
-        ["check", "clean", "same"].forEach(function (k) {
+        ["check", "clean", "same", "julia"].forEach(function (k) {
           if (typeof p[k] === "boolean") settings[k] = p[k];
         });
       }
@@ -1670,16 +1770,21 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   }
 
   document.addEventListener("keydown", function (e) {
-    var tag = e.target.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA") return;
-    if (busy) return;
-
     var k = e.key;
 
+    // Zuerst prüfen, ob das Blatt offen ist — und zwar VOR dem Ausstieg für
+    // Eingabefelder: nach dem Umschalten eines Schalters liegt der Fokus auf
+    // dessen Checkbox, und Escape müsste das Blatt sonst nicht mehr schliessen.
+    // Alle anderen Tasten gehen im offenen Blatt an die Oberfläche (die
+    // Leertaste schaltet damit weiterhin den fokussierten Schalter).
     if (sheetOpen()) {
       if (k === "Escape") { e.preventDefault(); setSheet(false); }
       return;
     }
+
+    var tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (busy) return;
 
     if (k === " " || k === "Spacebar") {
       e.preventDefault();
@@ -1767,6 +1872,16 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     });
   }
 
+  /* ==========================================================
+     Start
+     ========================================================== */
+
+  loadMeta();
+  applyMode();
+
+  // Erst NACH loadMeta binden: bindSwitch überträgt den Zustand in die
+  // Checkbox, und vorher stünden dort noch die Standardwerte — ein
+  // abgeschalteter Schalter würde nach dem Neuladen wieder „an" anzeigen.
   bindSwitch("#setCheck", "check", function () {
     for (var i = 0; i < 81; i++) {
       wrong[i] = (settings.check && board[i] && !given[i] && board[i] !== solution[i]) ? 1 : 0;
@@ -1775,12 +1890,10 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   });
   bindSwitch("#setClean", "clean");
   bindSwitch("#setSame", "same");
-
-  /* ==========================================================
-     Start
-     ========================================================== */
-
-  loadMeta();
+  bindSwitch("#setJulia", "julia", function () {
+    applyMode();
+    say(settings.julia ? "Julia-Modus an." : "Julia-Modus aus.");
+  });
   segs.forEach(function (o) {
     o.setAttribute("aria-checked", o.dataset.diff === nextDifficulty ? "true" : "false");
   });
