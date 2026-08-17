@@ -6,8 +6,13 @@
 <title>Sudoku</title>
 <style>
 /* ============================================================
-   Tinte & Raster — Sudoku
-   Grund: Millimeterpapier. Tinte: Tiefindigo. Zinnober nur für Fehler.
+   Sudoku — Material 3 Expressive, Variante „Kompakt" (1c)
+   Farbschema aus dem Seed #1E4FA6. Dichte Geometrie, kleine
+   Radien, neutrale Tasten. Hell/dunkel folgt dem System.
+
+   Ohne Netzwerkaufrufe: Roboto wird genutzt, wo vorhanden,
+   sonst die Systemschrift; Icons sind Inline-SVG; die
+   material-web-Komponenten sind als M3-Bauteile nachgebildet.
    ============================================================ */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -15,240 +20,243 @@
 :root {
   color-scheme: light;
 
-  --paper:        #E8EBF0;
-  --grid-line:    rgba(31, 41, 63, .05);
-  --surface:      #FCFDFE;
-  --surface-2:    #F1F4F8;
-  --ink:          #141D2E;
-  --ink-2:        #4C586D;
-  --ink-3:        #838E9F;
-  --rule:         #C7CFDB;
-  --rule-strong:  #1F293D;
+  --primary: #2b5db0;            --on-primary: #ffffff;
+  --primary-container: #d9e2ff;  --on-primary-container: #001945;
+  --secondary: #575e71;          --on-secondary: #ffffff;
+  --secondary-container: #dce2f9; --on-secondary-container: #141b2c;
+  --error: #ba1a1a;              --on-error: #ffffff;
+  --error-container: #ffdad6;     --on-error-container: #410002;
+  --surface: #faf8ff;            --on-surface: #1a1b20;
+  --surface-variant: #e1e2ec;    --on-surface-variant: #44464f;
+  --outline: #757780;            --outline-variant: #c5c6d0;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f4f3fa;
+  --surface-container: #eeedf4;
+  --surface-container-high: #e9e7ef;
+  --surface-container-highest: #e3e2e9;
+  --success: #146b4e;
+  --paper: #dfe4ee;
+  --grid-line: rgba(31, 41, 63, .055);
+  --scrim: rgba(0, 0, 0, .42);
+  --sheet-shadow: 0 -8px 32px rgba(0, 0, 0, .24);
 
-  --accent:       #1E4FA6;
-  --accent-2:     #3E74D6;
-  --accent-tint:  #E7EEFA;
+  /* Form — Variante „Kompakt" */
+  --r-panel: 16px;
+  --r-pill: 10px;
+  --r-key: 10px;
+  --r-key-a: 20px;
+  --r-tool: 10px;
+  --blk-line: 1.5px;
+  --cell-line: 1px;
+  --key-gap: 3px;
 
-  --shu:          #AF3A22;
-  --shu-tint:     #F7DCD5;
-  --jade:         #1D6B58;
-  --jade-tint:    #DCEDE7;
-
-  --hl-peer:      #EDF1F7;
-  --hl-same:      #DBE6F7;
-  --hl-sel:       #C7DAF6;
-
-  /* Text auf tintenfarbenen oder akzentfarbenen Flächen */
-  --on-ink:       #FCFDFE;
-
-  --shadow-1: 0 1px 2px rgba(20, 29, 46, .07);
-  --shadow-2: 0 2px 4px rgba(20, 29, 46, .06), 0 20px 44px -20px rgba(20, 29, 46, .40);
-
-  --font-display: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
-  --font-num: Futura, "Futura PT", "Century Gothic", "URW Gothic", "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
-  --font-text: Charter, "Bitstream Charter", "Iowan Old Style", Constantia, "Palatino Linotype", Palatino, Georgia, serif;
-
-  --radius: 3px;
+  --font: 'Roboto Flex', Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ease: cubic-bezier(.2, 0, 0, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --paper:       #0E131A;
-    --grid-line:   rgba(180, 200, 235, .045);
-    --surface:     #151B24;
-    --surface-2:   #1B222D;
-    --ink:         #E5EAF2;
-    --ink-2:       #A2ACBB;
-    --ink-3:       #737E8D;
-    --rule:        #333E50;
-    --rule-strong: #6C7B92;
-
-    --accent:      #8CB2F0;
-    --accent-2:    #A6C5F6;
-    --accent-tint: #1A2436;
-
-    --shu:         #E9866E;
-    --shu-tint:    #3B1F19;
-    --jade:        #62C0A4;
-    --jade-tint:   #123029;
-
-    --hl-peer:     #212B3A;
-    --hl-same:     #26364F;
-    --hl-sel:      #32496E;
-
-    --on-ink:      #0E131A;
-
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, .35);
-    --shadow-2: 0 2px 4px rgba(0, 0, 0, .30), 0 20px 44px -20px rgba(0, 0, 0, .75);
+    --primary: #b0c6ff;            --on-primary: #002e69;
+    --primary-container: #14448f;  --on-primary-container: #d9e2ff;
+    --secondary: #bfc6dc;          --on-secondary: #293042;
+    --secondary-container: #3f4759; --on-secondary-container: #dce2f9;
+    --error: #ffb4ab;              --on-error: #690005;
+    --error-container: #93000a;     --on-error-container: #ffdad6;
+    --surface: #121318;            --on-surface: #e3e2e9;
+    --surface-variant: #44464f;    --on-surface-variant: #c5c6d0;
+    --outline: #8f9099;            --outline-variant: #44464f;
+    --surface-container-lowest: #0d0e13;
+    --surface-container-low: #1a1b20;
+    --surface-container: #1e1f25;
+    --surface-container-high: #292a2f;
+    --surface-container-highest: #34343a;
+    --success: #8bd6b0;
+    --paper: #0e131a;
+    --grid-line: rgba(180, 200, 235, .045);
+    --scrim: rgba(0, 0, 0, .55);
+    --sheet-shadow: 0 -8px 32px rgba(0, 0, 0, .5);
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper:       #0E131A;
-  --grid-line:   rgba(180, 200, 235, .045);
-  --surface:     #151B24;
-  --surface-2:   #1B222D;
-  --ink:         #E5EAF2;
-  --ink-2:       #A2ACBB;
-  --ink-3:       #737E8D;
-  --rule:        #333E50;
-  --rule-strong: #6C7B92;
-
-  --accent:      #8CB2F0;
-  --accent-2:    #A6C5F6;
-  --accent-tint: #1A2436;
-
-  --shu:         #E9866E;
-  --shu-tint:    #3B1F19;
-  --jade:        #62C0A4;
-  --jade-tint:   #123029;
-
-  --hl-peer:     #212B3A;
-  --hl-same:     #26364F;
-  --hl-sel:      #32496E;
-
-  --on-ink:      #0E131A;
-
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, .35);
-  --shadow-2: 0 2px 4px rgba(0, 0, 0, .30), 0 20px 44px -20px rgba(0, 0, 0, .75);
+  --primary: #b0c6ff;            --on-primary: #002e69;
+  --primary-container: #14448f;  --on-primary-container: #d9e2ff;
+  --secondary: #bfc6dc;          --on-secondary: #293042;
+  --secondary-container: #3f4759; --on-secondary-container: #dce2f9;
+  --error: #ffb4ab;              --on-error: #690005;
+  --error-container: #93000a;     --on-error-container: #ffdad6;
+  --surface: #121318;            --on-surface: #e3e2e9;
+  --surface-variant: #44464f;    --on-surface-variant: #c5c6d0;
+  --outline: #8f9099;            --outline-variant: #44464f;
+  --surface-container-lowest: #0d0e13;
+  --surface-container-low: #1a1b20;
+  --surface-container: #1e1f25;
+  --surface-container-high: #292a2f;
+  --surface-container-highest: #34343a;
+  --success: #8bd6b0;
+  --paper: #0e131a;
+  --grid-line: rgba(180, 200, 235, .045);
+  --scrim: rgba(0, 0, 0, .55);
+  --sheet-shadow: 0 -8px 32px rgba(0, 0, 0, .5);
 }
 
 /* ---------- Grundlage ---------- */
 
+html, body { height: 100%; }
+
 body {
   margin: 0;
-  min-height: 100vh;
-  color: var(--ink);
+  overflow: hidden;
+  overscroll-behavior: none;
+  color: var(--on-surface);
   background-color: var(--paper);
   background-image:
     linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 28px 28px, 28px 28px;
   background-position: center top;
-  font-family: var(--font-num);
+  font-family: var(--font);
   -webkit-font-smoothing: antialiased;
 }
 
-.page {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: clamp(20px, 4vw, 44px) clamp(14px, 4vw, 40px) clamp(32px, 6vw, 64px);
+.app {
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, 3vw, 30px);
-}
-
-.label {
-  font-family: var(--font-display);
-  font-size: 10px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.mono { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
-
-.sr-only {
-  position: absolute; width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden;
-  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-}
-
-/* ---------- Kopf ---------- */
-
-.masthead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px 26px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--rule);
-}
-
-.wordmark h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(19px, 3.4vw, 25px);
-  font-weight: 500;
-  letter-spacing: .3em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-
-.tagline {
-  margin: 8px 0 0;
-  max-width: 46ch;
-  font-family: var(--font-text);
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--ink-2);
-}
-
-.readout {
-  display: flex;
-  align-items: flex-end;
-  gap: 22px;
-}
-
-.readout-item { display: flex; flex-direction: column; gap: 5px; }
-
-.readout-item .value {
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  font-size: 19px;
-  line-height: 1;
-  color: var(--ink);
-}
-
-.readout-item .value.is-alert { color: var(--shu); }
-
-.readout-item .value.is-word {
-  font-size: 12px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  padding-bottom: 4px;
-}
-
-/* ---------- Aufteilung ---------- */
-
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(22px, 3.4vw, 40px);
-  align-items: start;
-}
-
-@media (min-width: 860px) {
-  .layout { grid-template-columns: minmax(0, 1fr) 286px; }
-}
-
-.board-column {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: center;
-}
-
-/* ---------- Brett ---------- */
-
-.board-frame {
+  overflow: hidden;
   position: relative;
-  width: min(100%, 540px);
+  outline: none;
 }
+
+/* Trägt Kopfzeile, Kennzahlen und Bühne. Muss Flex-Container sein, damit
+   die Bühne über flex:1 die Resthöhe bekommt; align-items bleibt stretch,
+   sonst schrumpfen die Kinder auf Inhaltsbreite und fitBoard() würde seine
+   eigene Ausgabe messen. */
+.board-col {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.icon { width: 22px; height: 22px; flex: none; display: block; }
+.icon [stroke] { vector-effect: non-scaling-stroke; }
+
+svg.icon { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+svg.icon .fill { fill: currentColor; stroke: none; }
+
+/* ---------- Kopfzeile ---------- */
+
+.topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: var(--fit-w, 100%);
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 12px 2px 8px;
+}
+
+.wordmark {
+  flex: 1;
+  min-width: 0;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: .1px;
+}
+
+.icon-btn {
+  width: 44px; height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--r-tool);
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: border-radius .22s var(--ease), background-color .18s;
+}
+.icon-btn.tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
+.icon-btn:hover { filter: brightness(.97); }
+.icon-btn:active { border-radius: var(--r-key-a); }
+.icon-btn.on { background: var(--primary); color: var(--on-primary); }
+.icon-btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+/* ---------- Kennzahlen ---------- */
+
+.stats {
+  flex: none;
+  display: flex;
+  gap: 8px;
+  width: var(--fit-w, 100%);
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 0 10px;
+}
+
+.stat {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 12px;
+  border-radius: var(--r-pill);
+  background: var(--surface-container);
+}
+.stat.accent { background: var(--secondary-container); color: var(--on-secondary-container); }
+
+.stat-label {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.stat.accent .stat-label { color: inherit; opacity: .75; }
+
+.stat-value {
+  font-size: 19px;
+  line-height: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stat-value.is-error { color: var(--error); }
+
+/* ---------- Spielfeld ---------- */
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.frame { position: relative; width: 100%; max-width: 660px; }
 
 .board {
-  position: relative;
+  container-type: inline-size;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   grid-auto-rows: 1fr;
   aspect-ratio: 1 / 1;
-  container-type: inline-size;
-  background: var(--surface);
-  border: 2px solid var(--rule-strong);
-  box-shadow: var(--shadow-2);
+  width: 100%;
+  border: var(--blk-line) solid var(--on-surface-variant);
+  background: var(--surface-container-lowest);
 }
 
 .brow { display: contents; }
@@ -257,595 +265,425 @@ body {
   position: relative;
   display: grid;
   place-items: center;
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  background: transparent;
+  min-width: 0;
+  min-height: 0;
+  border-right: var(--cell-line) solid var(--outline-variant);
+  border-bottom: var(--cell-line) solid var(--outline-variant);
+  background: var(--surface-container-lowest);
   cursor: pointer;
   user-select: none;
-  transition: background-color .12s ease;
+  transition: background-color .14s var(--ease);
 }
-
-.cell[data-c="2"], .cell[data-c="5"] { border-right: 2px solid var(--rule-strong); }
-.cell[data-r="2"], .cell[data-r="5"] { border-bottom: 2px solid var(--rule-strong); }
+.cell[data-c="2"], .cell[data-c="5"] { border-right: var(--blk-line) solid var(--on-surface-variant); }
+.cell[data-r="2"], .cell[data-r="5"] { border-bottom: var(--blk-line) solid var(--on-surface-variant); }
 .cell[data-c="8"] { border-right: 0; }
 .cell[data-r="8"] { border-bottom: 0; }
 
-.cell.peer  { background: var(--hl-peer); }
-.cell.same  { background: var(--hl-same); }
-.cell.sel   { background: var(--hl-sel); }
+.cell.peer { background: var(--surface-container-high); }
+.cell.same { background: var(--secondary-container); }
+.cell.wrong { background: var(--error-container); }
+.cell.sel  { background: var(--primary-container); }
 .cell.sel::after {
   content: "";
   position: absolute;
   inset: 0;
-  box-shadow: inset 0 0 0 2px var(--accent);
+  box-shadow: inset 0 0 0 2px var(--primary);
   pointer-events: none;
+  z-index: 2;
 }
 
-.cell .val {
-  font-family: var(--font-num);
-  font-size: clamp(16px, 5.4vw, 30px);
+.val {
+  font-size: clamp(13px, 5vw, 34px);
   line-height: 1;
-  color: var(--accent);
   font-weight: 500;
+  color: var(--primary);
 }
+.cell.given .val { color: var(--on-surface); font-weight: 600; }
+.cell.revealed .val { color: var(--success); }
+.cell.conflict .val, .cell.wrong .val { color: var(--error); }
+.cell.sel .val { color: var(--on-primary-container); }
+.board.solved .val { color: var(--success); }
 
-@supports (font-size: 1cqw) {
-  .cell .val { font-size: 5.6cqw; }
-}
-
-.cell.given .val { color: var(--ink); font-weight: 600; }
-.cell.revealed .val { color: var(--jade); }
-.cell.conflict .val { color: var(--shu); }
-.cell.wrong { background: var(--shu-tint); }
-.cell.wrong .val { color: var(--shu); }
-
-.cell .notes {
+.notes {
   position: absolute;
-  inset: 6%;
+  inset: 9%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   pointer-events: none;
 }
-
-.cell .note {
+.note {
   display: grid;
   place-items: center;
-  font-family: var(--font-display);
-  font-size: clamp(7px, 1.9vw, 11px);
+  font-size: clamp(6px, 2vw, 13px);
   line-height: 1;
-  color: var(--ink-3);
+  font-weight: 500;
+  color: var(--on-surface-variant);
   visibility: hidden;
 }
+.note.on { visibility: visible; }
+.cell.has-value .notes { display: none; }
 
 @supports (font-size: 1cqw) {
-  .cell .note { font-size: max(6.5px, 2.05cqw); }
+  .val { font-size: 5.6cqw; }
+  .note { font-size: max(6.5px, 2.35cqw); }
 }
-
-.cell .note.on { visibility: visible; }
-.cell.has-value .notes { display: none; }
 
 .cell:focus-visible { outline: none; }
 .cell:focus-visible::before {
   content: "";
   position: absolute;
   inset: 1px;
-  box-shadow: inset 0 0 0 2px var(--accent-2);
+  box-shadow: inset 0 0 0 2px var(--primary);
   pointer-events: none;
+  z-index: 3;
 }
-
-/* Registermarken an den Ecken — Reprovorlage statt Zierrat */
-.ticks { position: absolute; inset: -13px; pointer-events: none; }
-.ticks span { position: absolute; width: 9px; height: 9px; }
-.ticks span:nth-child(1) { top: 0; left: 0; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
-.ticks span:nth-child(2) { top: 0; right: 0; border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); }
-.ticks span:nth-child(3) { bottom: 0; left: 0; border-bottom: 1px solid var(--rule); border-left: 1px solid var(--rule); }
-.ticks span:nth-child(4) { bottom: 0; right: 0; border-bottom: 1px solid var(--rule); border-right: 1px solid var(--rule); }
 
 @keyframes wave {
   0%   { transform: none; }
-  35%  { transform: translateY(-7px) scale(1.05); }
+  35%  { transform: translateY(-9px) scale(1.07); }
   100% { transform: none; }
 }
 .cell.wave { animation: wave .62s cubic-bezier(.34, 1.4, .5, 1) both; }
-.board.solved .cell .val { color: var(--jade); }
 
-/* ---------- Sperrschicht (Pause / Gelöst / Erzeugung) ---------- */
+.message {
+  margin: 0;
+  min-height: 18px;
+  height: 18px;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ---------- Sperrschicht ---------- */
+
+@keyframes veilIn { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
 
 .veil {
   position: absolute;
   inset: 0;
   display: none;
   place-items: center;
-  padding: 18px;
+  padding: 20px;
   background: var(--surface);
-  background: color-mix(in srgb, var(--surface) 84%, transparent);
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
   z-index: 5;
 }
 .veil.on { display: grid; }
-.veil-panel { text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; }
-.veil-title {
-  font-family: var(--font-display);
-  font-size: 13px;
-  letter-spacing: .24em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-.veil-stats {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 18px;
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  color: var(--ink-2);
-}
-.veil-stats b { color: var(--ink); font-weight: 500; }
-.veil-note { font-family: var(--font-text); font-size: 13px; color: var(--ink-2); margin: 0; }
 
-.message {
-  min-height: 20px;
-  font-family: var(--font-text);
-  font-size: 13.5px;
-  line-height: 1.4;
-  color: var(--ink-2);
-  text-align: center;
-}
-
-/* ---------- Leiste ---------- */
-
-.rail {
+.veil-panel {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  animation: veilIn .32s var(--ease) both;
 }
+.veil-icon { width: 44px; height: 44px; color: var(--primary); stroke-width: 1.7; }
+.veil-title { font-size: 24px; line-height: 30px; font-weight: 600; }
+.veil-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--surface-container-high);
+  font-size: 13px;
+  font-weight: 500;
+}
+.veil-note { margin: 0; max-width: 30ch; font-size: 14px; line-height: 20px; color: var(--on-surface-variant); }
 
-.rail-block { display: flex; flex-direction: column; gap: 10px; }
-.rail-block > .label { padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+/* ---------- Bedienteil ---------- */
 
-/* Auf dem Desktop läuft der Zusatzteil einfach in der Leiste mit;
-   am Handy wird daraus ein Blatt, das von unten einfährt. */
-.rail-extra { display: flex; flex-direction: column; gap: 24px; }
-.sheet-head, .sheet-close, .menu-btn, .sheet-backdrop { display: none; }
-
-/* Ziffernblock als 3×3-Kästchen — dieselbe Geometrie wie eine Sudoku-Box */
-.pad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  width: min(100%, 286px);
+.deck {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: calc(var(--fit-w, 100%) + 24px);
+  max-width: 100%;
   margin: 0 auto;
-  border: 2px solid var(--rule-strong);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  padding: 12px 12px calc(14px + env(safe-area-inset-bottom));
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  background: var(--surface-container);
 }
+
+.keys { display: grid; grid-template-columns: repeat(9, 1fr); gap: var(--key-gap); }
 
 .key {
   position: relative;
-  aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
+  aspect-ratio: 1 / 1.75;
   border: 0;
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  background: transparent;
-  color: var(--accent);
-  font-family: var(--font-num);
-  font-size: clamp(20px, 6vw, 27px);
-  font-weight: 500;
+  border-radius: var(--r-key);
+  background: var(--surface-container-highest);
+  color: var(--on-surface);
+  font-family: inherit;
   cursor: pointer;
-  transition: background-color .12s ease, color .12s ease;
+  transition: border-radius .22s var(--ease), background-color .18s, opacity .18s;
 }
-.key:nth-child(3n) { border-right: 0; }
-.key:nth-child(n+7) { border-bottom: 0; }
-.key:hover { background: var(--hl-peer); }
-.key:active { background: var(--hl-same); }
-.key:focus-visible { outline: 2px solid var(--accent-2); outline-offset: -3px; }
-.key.done { color: var(--ink-3); opacity: .45; }
+.key:hover { filter: brightness(.97); }
+.key:active { border-radius: var(--r-key-a); }
+.key:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.key.done { opacity: .4; }
 
-.key .left {
+.key-num { font-size: 18px; line-height: 1; font-weight: 600; }
+.keys.notes-mode .key { background: var(--surface-container-highest); color: var(--on-surface-variant); }
+.keys.notes-mode .key-num { font-size: 15px; }
+
+.key-left {
   position: absolute;
-  right: 5px;
-  bottom: 3px;
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
+  right: 4px; bottom: 2px;
   font-size: 9px;
-  color: var(--ink-3);
+  line-height: 1;
+  font-weight: 500;
+  opacity: .55;
+  font-variant-numeric: tabular-nums;
 }
 
-.pad.notes-mode .key { color: var(--ink-2); font-size: clamp(15px, 4.4vw, 19px); }
-
-/* Werkzeuge */
-.tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.tools { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
 
 .tool {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 10px 4px 8px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--ink-2);
+  justify-content: center;
+  gap: 3px;
+  padding: 11px 2px 9px;
+  border: 0;
+  border-radius: var(--r-tool);
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  font-family: inherit;
   cursor: pointer;
-  transition: border-color .12s ease, color .12s ease, background-color .12s ease;
+  transition: border-radius .22s var(--ease), background-color .18s;
 }
-.tool:hover { border-color: var(--ink-3); color: var(--ink); }
-.tool:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
-.tool:disabled { opacity: .38; cursor: not-allowed; }
-.tool:disabled:hover { border-color: var(--rule); color: var(--ink-2); }
-.tool svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.tool span {
-  font-family: var(--font-display);
-  font-size: 9px;
-  letter-spacing: .1em;
+.tool:hover { filter: brightness(.97); }
+.tool:active { border-radius: 24px; }
+.tool:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.tool:disabled { opacity: .38; cursor: default; }
+.tool:disabled:hover { filter: none; }
+.tool.on { background: var(--primary); color: var(--on-primary); }
+.tool-label { font-size: 10px; line-height: 12px; letter-spacing: .3px; font-weight: 500; }
+
+/* ---------- Menü-Blatt ---------- */
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: var(--scrim);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .26s var(--ease);
+}
+.scrim.on { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 21;
+  max-height: 86%;
+  overflow-y: auto;
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+  border-radius: 28px 28px 0 0;
+  background: var(--surface-container-low);
+  box-shadow: var(--sheet-shadow);
+  transform: translateY(101%);
+  visibility: hidden;
+  transition: transform .34s var(--ease), visibility .34s;
+}
+.sheet.open { transform: none; visibility: visible; }
+
+.grabber { width: 32px; height: 4px; margin: 0 auto 14px; border-radius: 2px; background: var(--outline-variant); }
+.sheet-body { display: flex; flex-direction: column; gap: 22px; }
+.sheet-group { display: flex; flex-direction: column; gap: 10px; }
+
+.sheet-label {
+  font-size: 12px;
+  letter-spacing: .6px;
   text-transform: uppercase;
-}
-.tool[aria-pressed="true"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-ink);
+  font-weight: 600;
+  color: var(--on-surface-variant);
 }
 
-/* Schwierigkeit */
+/* Segmented button */
 .segmented {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--outline);
+  border-radius: 999px;
   overflow: hidden;
-  background: var(--surface);
 }
 .seg {
-  padding: 9px 6px;
-  border: 0;
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  background: transparent;
-  color: var(--ink-2);
-  font-family: var(--font-display);
-  font-size: 10px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background-color .12s ease, color .12s ease;
-}
-.seg:nth-child(2n) { border-right: 0; }
-.seg:nth-child(n+3) { border-bottom: 0; }
-.seg:hover { background: var(--hl-peer); color: var(--ink); }
-.seg:focus-visible { outline: 2px solid var(--accent-2); outline-offset: -3px; }
-.seg[aria-checked="true"] { background: var(--accent); color: var(--on-ink); }
-
-.btn {
-  padding: 11px 14px;
-  border: 1px solid var(--ink);
-  border-radius: var(--radius);
-  background: var(--ink);
-  color: var(--on-ink);
-  font-family: var(--font-display);
-  font-size: 10px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: opacity .12s ease;
-}
-.btn:hover { opacity: .84; }
-.btn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
-
-.btn-quiet {
-  padding: 9px 12px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--ink-2);
-  font-family: var(--font-display);
-  font-size: 10px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: border-color .12s ease, color .12s ease;
-}
-.btn-quiet:hover { border-color: var(--ink-3); color: var(--ink); }
-.btn-quiet:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
-
-/* Einstellungen */
-.switch {
   display: flex;
   align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-family: var(--font-text);
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border: 0;
+  border-right: 1px solid var(--outline);
+  background: transparent;
+  color: var(--on-surface);
+  font-family: inherit;
   font-size: 13px;
-  color: var(--ink-2);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color .18s;
 }
-.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.seg:last-child { border-right: 0; }
+.seg[aria-checked="true"] { background: var(--secondary-container); color: var(--on-secondary-container); }
+.seg:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
+.seg .check { width: 0; height: 16px; overflow: hidden; transition: width .2s var(--ease); stroke-width: 2.6; }
+.seg[aria-checked="true"] .check { width: 16px; }
+
+/* M3-Bauteile (Ersatz für material-web) */
+.btn-filled {
+  width: 100%;
+  height: 40px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .1px;
+  cursor: pointer;
+  transition: filter .18s, border-radius .24s var(--ease);
+}
+.btn-filled:hover { filter: brightness(1.08); }
+.btn-filled:active { border-radius: 12px; }
+.btn-filled:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+.btn-text {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .1px;
+  cursor: pointer;
+  transition: background-color .18s;
+}
+.btn-text:hover { background: color-mix(in srgb, var(--primary) 10%, transparent); }
+.btn-text:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 4px;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+.switch-row input { position: absolute; opacity: 0; width: 0; height: 0; }
 .track {
-  flex: none;
-  width: 30px;
-  height: 16px;
-  border: 1px solid var(--rule);
-  border-radius: 9px;
-  background: var(--surface-2);
   position: relative;
-  transition: background-color .14s ease, border-color .14s ease;
+  flex: none;
+  width: 52px; height: 32px;
+  border: 2px solid var(--outline);
+  border-radius: 16px;
+  background: var(--surface-container-highest);
+  transition: background-color .2s var(--ease), border-color .2s var(--ease);
 }
 .track::after {
   content: "";
   position: absolute;
-  top: 2px; left: 2px;
-  width: 10px; height: 10px;
+  top: 50%; left: 6px;
+  width: 16px; height: 16px;
+  margin-top: -8px;
   border-radius: 50%;
-  background: var(--ink-3);
-  transition: transform .14s ease, background-color .14s ease;
+  background: var(--outline);
+  transition: transform .22s var(--ease), width .22s var(--ease), height .22s var(--ease), background-color .2s, margin .22s var(--ease), left .22s var(--ease);
 }
-.switch input:checked + .track { background: var(--accent-tint); border-color: var(--accent); }
-.switch input:checked + .track::after { transform: translateX(14px); background: var(--accent); }
-.switch input:focus-visible + .track { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.switch-row input:checked + .track { background: var(--primary); border-color: var(--primary); }
+.switch-row input:checked + .track::after {
+  left: 4px;
+  width: 24px; height: 24px;
+  margin-top: -12px;
+  transform: translateX(20px);
+  background: var(--on-primary);
+}
+.switch-row input:focus-visible + .track { outline: 3px solid var(--primary); outline-offset: 3px; }
 
-/* Hilfe */
-details.help {
-  border-top: 1px solid var(--rule);
-  padding-top: 12px;
-}
-details.help summary {
-  cursor: pointer;
-  font-family: var(--font-display);
-  font-size: 10px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  list-style: none;
-}
-details.help summary::-webkit-details-marker { display: none; }
-details.help summary::before { content: "+ "; }
-details.help[open] summary::before { content: "– "; }
-details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.shortcuts { display: flex; flex-direction: column; gap: 8px; }
+.shortcut { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.shortcut dt { font-size: 13px; font-weight: 600; font-family: var(--font-mono); white-space: nowrap; }
+.shortcut dd { margin: 0; font-size: 13px; line-height: 18px; text-align: right; color: var(--on-surface-variant); }
 
-.keys { margin: 12px 0 0; display: grid; gap: 7px; }
-.keys div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-.keys dt {
-  font-family: var(--font-display);
-  font-size: 10.5px;
-  color: var(--ink);
-  white-space: nowrap;
-}
-.keys dd {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 12.5px;
-  color: var(--ink-2);
-  text-align: right;
+.sheet-divider { padding-top: 4px; border-top: 1px solid var(--outline-variant); }
+.sheet-note { margin: 6px 0 0; font-size: 13px; line-height: 19px; color: var(--on-surface-variant); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-.colophon {
-  padding-top: 16px;
-  border-top: 1px solid var(--rule);
-  font-family: var(--font-text);
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: var(--ink-3);
-  max-width: 62ch;
+/* ---------- Enge Höhen: Bedienteil schrumpft, Brett bleibt ---------- */
+
+@media (max-height: 720px) {
+  .key { aspect-ratio: auto; height: 48px; }
 }
-
-.colophon.is-nested { border-top: 0; padding-top: 14px; }
-
-/* ============================================================
-   Handy: alles in eine Bildschirmhöhe, kein Scrollen.
-   Die Ziffern stehen als durchgehende Reihe am unteren Rand,
-   alles Übrige zieht sich in ein Blatt hinter dem Menü zurück.
-   ============================================================ */
-
-@media (max-width: 859px) {
-
-  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
-
-  .page {
-    height: 100dvh;
-    max-width: none;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
-    gap: 8px;
-    overflow: hidden;
-  }
-
-  /* Kopfzeile auf eine Zeile eindampfen */
-  .masthead {
-    align-items: center;
-    gap: 6px 14px;
-    padding-bottom: 8px;
-  }
-  .wordmark h1 { font-size: 14px; letter-spacing: .2em; }
-  .tagline { display: none; }
-  .readout { flex: 1; justify-content: flex-end; align-items: center; gap: 14px; }
-  .readout-item { flex-direction: row; align-items: baseline; gap: 5px; }
-  .readout-item .value { font-size: 15px; }
-  .readout-item .value.is-word { font-size: 11px; padding-bottom: 0; }
-
-  .menu-btn {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 34px; height: 34px;
-    padding: 0;
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    background: var(--surface);
-    color: var(--ink-2);
-    cursor: pointer;
-  }
-  .menu-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; }
-  .menu-btn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
-
-  /* Brett bekommt den gesamten Rest der Höhe */
-  .layout {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    /* Muss stretch sein: die Basisregel setzt start, wodurch die Spalten auf
-       Inhaltsbreite schrumpfen — fitBoard() würde dann seine eigene Ausgabe
-       messen und das Brett Schritt für Schritt kleinrechnen. */
-    align-items: stretch;
-  }
-  .board-column { flex: 1; min-height: 0; justify-content: center; gap: 6px; }
-  /* Näherung schon ohne JS; fitBoard() setzt danach das genaue Maß */
-  .board-frame { width: min(100%, calc(100dvh - 200px)); }
-  .ticks { display: none; }
-
-  .message {
-    min-height: 16px;
-    height: 16px;
-    font-size: 12px;
-    line-height: 16px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  /* Bedienteil unten */
-  .rail { flex: none; gap: 7px; }
-  .rail-block > .label { display: none; }
-  .pad-block, .tools-block { gap: 0; }
-
-  /* Ziffern der Reihe nach, 1 bis 9 in einer Zeile */
-  .pad {
-    grid-template-columns: repeat(9, 1fr);
-    width: 100%;
-    max-width: none;
-  }
-  .key {
-    aspect-ratio: auto;
-    height: 48px;
-    font-size: 21px;
-    border-right: 1px solid var(--rule);
-    border-bottom: 0;
-  }
-  .key:nth-child(3n) { border-right: 1px solid var(--rule); }
-  .key:nth-child(3n)::after {                 /* Blockgrenzen wie im Gitter */
-    content: "";
-    position: absolute;
-    top: 0; bottom: 0; right: -1px;
-    width: 2px;
-    background: var(--rule-strong);
-    pointer-events: none;
-  }
-  .key:nth-child(9)::after { display: none; }
-  .key:nth-child(9) { border-right: 0; }
-  .key:nth-child(n+7) { border-bottom: 0; }
-  .pad.notes-mode .key { font-size: 16px; }
-  .key .left { right: 3px; bottom: 1px; font-size: 8px; }
-
-  .tools { gap: 5px; grid-template-columns: repeat(6, 1fr); }
-  .tool { padding: 7px 2px 5px; gap: 3px; }
-  .tool svg { width: 17px; height: 17px; }
-  .tool span { font-size: 7.5px; letter-spacing: .04em; }
-
-  /* Menü-Blatt */
-  .rail-extra {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 30;
-    gap: 20px;
-    max-height: 86dvh;
-    overflow-y: auto;
-    padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
-    background: var(--surface);
-    border-top: 2px solid var(--rule-strong);
-    box-shadow: var(--shadow-2);
-    transform: translateY(101%);
-    visibility: hidden;
-    transition: transform .24s ease, visibility .24s;
-  }
-  .rail-extra.open { transform: none; visibility: visible; }
-
-  .sheet-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--rule);
-  }
-  .sheet-close {
-    display: grid;
-    place-items: center;
-    width: 32px; height: 32px;
-    padding: 0;
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    background: transparent;
-    color: var(--ink-2);
-    cursor: pointer;
-  }
-  .sheet-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; }
-  .sheet-close:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
-
-  .sheet-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 29;
-    background: rgba(8, 12, 20, .42);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .24s ease;
-  }
-  .sheet-backdrop.on { opacity: 1; pointer-events: auto; }
-
-  .page > .colophon { display: none; }
-  .segmented { grid-template-columns: repeat(4, 1fr); }
-  .seg:nth-child(2n) { border-right: 1px solid var(--rule); }
-  .seg:nth-child(4) { border-right: 0; }
-  .seg:nth-child(n+3) { border-bottom: 0; }
-}
-
-/* Sehr flache Fenster: Werkzeugleiste schrumpft weiter, damit das Brett bleibt */
-@media (max-width: 859px) and (max-height: 660px) {
-  .key { height: 42px; font-size: 19px; }
-  .tool { padding: 5px 2px 4px; }
-  .tool svg { width: 15px; height: 15px; }
-  .tool span { display: none; }
+@media (max-height: 620px) {
+  .topbar { padding: 8px 2px 6px; }
+  .wordmark { font-size: 18px; line-height: 22px; }
+  .icon-btn { width: 40px; height: 40px; }
+  .stat { padding: 5px 10px; }
+  .stat-value { font-size: 16px; line-height: 19px; }
+  .key { height: 42px; }
+  .tool { padding: 7px 2px 6px; }
+  .tool-label { display: none; }
+  /* Auf flachen Schirmen ist das Brett höhenbegrenzt; das Bedienteil würde
+     seiner Breite folgen und die Tasten unnötig schmal machen. Hier zählt
+     Treffsicherheit mehr als die Kantenbündigkeit mit dem Brett. */
+  .deck { gap: 7px; padding-top: 9px; width: 100%; }
   .message { display: none; }
 }
 
-/* Handy im Querformat: die Höhe ist knapp, die Breite reichlich —
-   Bedienteil wandert neben das Brett und die Ziffern zurück ins 3×3-Feld. */
-@media (max-width: 859px) and (orientation: landscape) {
-  .layout { flex-direction: row; gap: 10px; align-items: stretch; }
-  .board-column { flex: 1; min-width: 0; }
-  /* Breite zusätzlich an der Höhe deckeln: das Ziffernfeld ist quadratisch und
-     muss samt Werkzeugleiste in die knappe Querformat-Höhe passen. */
-  .rail {
-    width: min(clamp(140px, 27vw, 196px), calc(100dvh - 150px));
+/* Querformat ist im Design nicht vorgesehen — hier trotzdem
+   spielbar halten: Bedienteil neben das Brett. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .app { flex-direction: row; align-items: stretch; gap: 10px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
+  .board-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar { width: 100%; padding: 2px 0 6px; }
+  /* Kennzahlen einzeilig — jede gesparte Höhe geht ans Brett */
+  .stats { width: 100%; padding: 0 0 6px; gap: 6px; }
+  .stat { flex-direction: row; align-items: baseline; gap: 6px; padding: 4px 10px; }
+  .stat-label { font-size: 10px; }
+  .stat-value { font-size: 14px; line-height: 18px; }
+  .stage { padding: 0; }
+  .deck {
+    width: clamp(150px, 30vw, 230px);
     flex: none;
     justify-content: center;
-    gap: 8px;
+    border-radius: var(--r-panel);
+    padding: 10px;
+    margin: 0;
   }
-
-  .pad { grid-template-columns: repeat(3, 1fr); }
-  .key {
-    height: auto;
-    aspect-ratio: 1 / 1;
-    font-size: 18px;
-    border-right: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-  }
-  .key:nth-child(3n) { border-right: 0; }
-  .key:nth-child(3n)::after { display: none; }
-  .key:nth-child(n+7) { border-bottom: 0; }
-  .pad.notes-mode .key { font-size: 14px; }
-
-  .tools { grid-template-columns: repeat(6, 1fr); gap: 4px; }
-  .tool { padding: 6px 2px; }
-  .tool span { display: none; }
+  .keys { grid-template-columns: repeat(3, 1fr); }
+  .key { aspect-ratio: 1 / 1; height: auto; }
+  .tools { grid-template-columns: repeat(3, 1fr); }
+  .tool-label { display: none; }
   .message { display: none; }
 }
 
-.cell, .key, .tool, .btn, .btn-quiet, .seg, .menu-btn, .sheet-close { touch-action: manipulation; }
+.cell, .key, .tool, .icon-btn, .seg, .btn-filled, .btn-text, .track { touch-action: manipulation; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -858,159 +696,126 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
 </head>
 <body>
 
-<div class="page">
+<div class="app" id="app">
+  <div class="board-col" id="boardCol">
 
-  <header class="masthead">
-    <div class="wordmark">
-      <h1>Sudoku</h1>
-      <p class="tagline">Klassisches Zahlengitter. Jedes Rätsel wird beim Start neu erzeugt und hat garantiert genau eine Lösung.</p>
+    <header class="topbar">
+      <div class="wordmark">Sudoku</div>
+      <button class="icon-btn" id="btnPause" type="button" aria-label="Pause" title="Pause (Leertaste)"></button>
+      <button class="icon-btn tonal" id="btnMenu" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sheet"></button>
+    </header>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-label">Zeit</span>
+        <span class="stat-value" id="timer">00:00</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Fehler</span>
+        <span class="stat-value" id="mistakes">0</span>
+      </div>
+      <div class="stat accent">
+        <span class="stat-label">Grad</span>
+        <span class="stat-value" id="diffLabel">Mittel</span>
+      </div>
     </div>
-    <div class="readout">
-      <div class="readout-item">
-        <span class="label">Zeit</span>
-        <span class="value" id="timer">00:00</span>
-      </div>
-      <div class="readout-item">
-        <span class="label">Fehler</span>
-        <span class="value" id="mistakes">0</span>
-      </div>
-      <div class="readout-item">
-        <span class="label">Grad</span>
-        <span class="value is-word" id="diffLabel">Mittel</span>
-      </div>
-      <button class="menu-btn" id="btnMenu" type="button" aria-expanded="false" aria-controls="sheet" aria-label="Menü öffnen">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
-      </button>
-    </div>
-  </header>
 
-  <main class="layout">
-
-    <div class="board-column">
-      <div class="board-frame">
-        <div class="ticks" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <main class="stage" id="stage">
+      <div class="frame" id="frame">
         <div class="board" id="board" role="grid" aria-label="Sudoku-Gitter"></div>
-        <div class="veil" id="veil">
-          <div class="veil-panel" id="veilPanel"></div>
-        </div>
+        <div class="veil" id="veil"><div class="veil-panel" id="veilPanel"></div></div>
       </div>
       <p class="message" id="message" role="status" aria-live="polite"></p>
-    </div>
+    </main>
 
-    <aside class="rail">
+  </div>
 
-      <div class="rail-block pad-block">
-        <span class="label" id="padLabel">Ziffern</span>
-        <div class="pad" id="pad" role="group" aria-labelledby="padLabel"></div>
+  <div class="deck">
+    <div class="keys" id="keys" role="group" aria-label="Ziffern"></div>
+    <div class="tools" id="tools"></div>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+
+  <section class="sheet" id="sheet" aria-label="Menü">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-body">
+
+      <div class="sheet-group">
+        <span class="sheet-label">Neues Rätsel</span>
+        <div class="segmented" id="diffPicker" role="radiogroup" aria-label="Schwierigkeitsgrad für das nächste Rätsel"></div>
+        <button class="btn-filled" id="btnNew" type="button">Rätsel erzeugen</button>
+        <button class="btn-text" id="btnRestart" type="button">Dieses Rätsel neu beginnen</button>
       </div>
 
-      <div class="rail-block tools-block">
-        <span class="label">Werkzeug</span>
-        <div class="tools">
-          <button class="tool" id="btnNotes" type="button" aria-pressed="false" title="Notizmodus (N)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1.1L19 8.1l-3.1-3.1L5.1 15.8 4 20z"/><path d="M14.6 6.3l3.1 3.1"/></svg>
-            <span>Notizen</span>
-          </button>
-          <button class="tool" id="btnErase" type="button" title="Zelle leeren (Entf)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 19h11"/><path d="M9.4 16.6L4.8 12l7.4-7.4 4.6 4.6-7.4 7.4z"/><path d="M7.1 14.3h9.2"/></svg>
-            <span>Löschen</span>
-          </button>
-          <button class="tool" id="btnHint" type="button" title="Tipp (H)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18.5h5"/><path d="M10.5 21.2h3"/><path d="M12 2.8a6.2 6.2 0 0 0-3.4 11.4v2.1h6.8v-2.1A6.2 6.2 0 0 0 12 2.8z"/></svg>
-            <span>Tipp</span>
-          </button>
-          <button class="tool" id="btnUndo" type="button" title="Rückgängig (Strg+Z)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9.5h9.8a4.7 4.7 0 0 1 0 9.4h-3.4"/><path d="M8.3 5.7L4.5 9.5l3.8 3.8"/></svg>
-            <span>Zurück</span>
-          </button>
-          <button class="tool" id="btnRedo" type="button" title="Wiederholen (Strg+Umschalt+Z)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 9.5H9.7a4.7 4.7 0 0 0 0 9.4h3.4"/><path d="M15.7 5.7l3.8 3.8-3.8 3.8"/></svg>
-            <span>Vor</span>
-          </button>
-          <button class="tool" id="btnPause" type="button" aria-pressed="false" title="Pause (Leertaste)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5v14"/><path d="M14.5 5v14"/></svg>
-            <span>Pause</span>
-          </button>
-        </div>
+      <div class="sheet-group" style="gap:4px">
+        <span class="sheet-label" style="padding-bottom:6px">Einstellungen</span>
+        <label class="switch-row"><span>Falsche Eingaben sofort markieren</span><input type="checkbox" id="setCheck" checked><span class="track"></span></label>
+        <label class="switch-row"><span>Notizen automatisch bereinigen</span><input type="checkbox" id="setClean" checked><span class="track"></span></label>
+        <label class="switch-row"><span>Gleiche Zahlen hervorheben</span><input type="checkbox" id="setSame" checked><span class="track"></span></label>
       </div>
 
-      <div class="rail-extra" id="sheet">
-
-      <div class="sheet-head">
-        <span class="label">Menü</span>
-        <button class="sheet-close" id="btnSheetClose" type="button" aria-label="Menü schließen">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>
-        </button>
-      </div>
-
-      <div class="rail-block">
-        <span class="label">Neues Rätsel</span>
-        <div class="segmented" id="diffPicker" role="radiogroup" aria-label="Schwierigkeitsgrad für das nächste Rätsel">
-          <button class="seg" type="button" role="radio" aria-checked="false" data-diff="leicht">Leicht</button>
-          <button class="seg" type="button" role="radio" aria-checked="true" data-diff="mittel">Mittel</button>
-          <button class="seg" type="button" role="radio" aria-checked="false" data-diff="schwer">Schwer</button>
-          <button class="seg" type="button" role="radio" aria-checked="false" data-diff="experte">Experte</button>
-        </div>
-        <button class="btn" id="btnNew" type="button">Rätsel erzeugen</button>
-        <button class="btn-quiet" id="btnRestart" type="button">Dieses Rätsel neu beginnen</button>
-      </div>
-
-      <div class="rail-block">
-        <span class="label">Einstellungen</span>
-        <label class="switch"><input type="checkbox" id="setCheck" checked><span class="track"></span>Falsche Eingaben sofort markieren</label>
-        <label class="switch"><input type="checkbox" id="setClean" checked><span class="track"></span>Notizen automatisch bereinigen</label>
-        <label class="switch"><input type="checkbox" id="setSame" checked><span class="track"></span>Gleiche Zahlen hervorheben</label>
-      </div>
-
-      <details class="help">
-        <summary>Tastatur &amp; Regeln</summary>
-        <dl class="keys">
-          <div><dt>← ↑ → ↓</dt><dd>Zelle wählen</dd></div>
-          <div><dt>1 – 9</dt><dd>Zahl eintragen</dd></div>
-          <div><dt>⇧ + 1 – 9</dt><dd>Notiz umschalten</dd></div>
-          <div><dt>0 · ⌫ · Entf</dt><dd>Zelle leeren</dd></div>
-          <div><dt>N</dt><dd>Notizmodus</dd></div>
-          <div><dt>H</dt><dd>Tipp einsetzen</dd></div>
-          <div><dt>Strg + Z</dt><dd>Rückgängig</dd></div>
-          <div><dt>Leertaste</dt><dd>Pause</dd></div>
+      <div class="sheet-group sheet-divider">
+        <span class="sheet-label" style="padding-top:12px">Tastatur</span>
+        <dl class="shortcuts">
+          <div class="shortcut"><dt>← ↑ → ↓</dt><dd>Zelle wählen</dd></div>
+          <div class="shortcut"><dt>1 – 9</dt><dd>Zahl eintragen</dd></div>
+          <div class="shortcut"><dt>⇧ + 1 – 9</dt><dd>Notiz umschalten</dd></div>
+          <div class="shortcut"><dt>0 · ⌫</dt><dd>Zelle leeren</dd></div>
+          <div class="shortcut"><dt>N</dt><dd>Notizmodus</dd></div>
+          <div class="shortcut"><dt>H</dt><dd>Tipp einsetzen</dd></div>
+          <div class="shortcut"><dt>Strg + Z</dt><dd>Rückgängig</dd></div>
+          <div class="shortcut"><dt>Leertaste</dt><dd>Pause</dd></div>
         </dl>
-        <p class="colophon is-nested">In jeder Zeile, jeder Spalte und jedem 3×3-Block muss jede Ziffer von 1 bis 9 genau einmal stehen. Die vorgegebenen Zahlen stehen fest, alles andere trägst du ein.</p>
-      </details>
-
+        <p class="sheet-note">In jeder Zeile, jeder Spalte und jedem 3×3-Block muss jede Ziffer von 1 bis 9 genau einmal stehen.</p>
+        <p class="sheet-note">Jedes Rätsel entsteht im Browser: ein zufälliges vollständiges Gitter, aus dem einzeln so lange Zahlen entfernt werden, wie die Lösung eindeutig bleibt.</p>
       </div>
-    </aside>
-  </main>
 
-  <div class="sheet-backdrop" id="sheetBackdrop"></div>
-
-  <footer class="colophon">
-    Die Rätsel entstehen im Browser: ein zufälliges vollständiges Gitter, aus dem so lange Zahlen entfernt werden, wie die Lösung eindeutig bleibt. „Leicht" und „Mittel" lassen sich allein über eindeutige Kandidaten lösen, „Experte" verlangt weitergehende Technik.
-  </footer>
-
+    </div>
+  </section>
 </div>
 
 <script>
 (function () {
   "use strict";
 
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+
   /* ==========================================================
-     Hilfsmittel
+     Icons — Material Symbols Rounded als Inline-SVG
      ========================================================== */
 
-  var $ = function (sel, root) { return (root || document).querySelector(sel); };
-  var BOX = new Uint8Array(81);
-  for (var i0 = 0; i0 < 81; i0++) {
-    BOX[i0] = Math.floor(i0 / 27) * 3 + Math.floor((i0 % 9) / 3);
+  var ICON = {
+    pause:    '<path d="M9.5 5.5v13M14.5 5.5v13" stroke-width="2.2"/>',
+    play:     '<path class="fill" d="M8.8 6.1c0-.8.85-1.28 1.5-.87l8.4 5.9c.6.42.6 1.32 0 1.74l-8.4 5.9c-.65.41-1.5-.07-1.5-.87V6.1z"/>',
+    tune:     '<path d="M3.5 8h8M16.5 8h4M3.5 16h4M12.5 16h8"/><circle cx="14" cy="8" r="2.4"/><circle cx="10" cy="16" r="2.4"/>',
+    notes:    '<path d="M4 6.8h10M4 11.2h6.5"/><path d="M12.4 17.8l5.6-5.6 2.6 2.6-5.6 5.6h-2.6v-2.6z"/>',
+    erase:    '<path d="M9.2 5.6h9.3a2 2 0 0 1 2 2v8.8a2 2 0 0 1-2 2H9.2L3.2 12l6-6.4z"/><path d="M11.8 9.6l4.6 4.8M16.4 9.6l-4.6 4.8"/>',
+    hint:     '<path d="M9.6 18.4h4.8M10.6 20.9h2.8"/><path d="M12 3.2a6.1 6.1 0 0 0-3.5 11.1v1.9h7V14.3A6.1 6.1 0 0 0 12 3.2z"/>',
+    undo:     '<path d="M4.5 9.6h9.7a4.7 4.7 0 0 1 0 9.4h-3.3"/><path d="M8.3 5.8L4.5 9.6l3.8 3.8"/>',
+    redo:     '<path d="M19.5 9.6H9.8a4.7 4.7 0 0 0 0 9.4h3.3"/><path d="M15.7 5.8l3.8 3.8-3.8 3.8"/>',
+    timer:    '<circle cx="12" cy="13.6" r="7.3"/><path d="M12 10v3.7l2.5 1.6M9.4 3h5.2"/>',
+    check:    '<path d="M5 12.6l4.6 4.4L19 7.4"/>',
+    sparkle:  '<path d="M11 3.2l1.75 4.6 4.6 1.75-4.6 1.75L11 15.9l-1.75-4.6-4.6-1.75 4.6-1.75L11 3.2z"/><path d="M18 15.1l.85 2.3 2.3.85-2.3.85-.85 2.3-.85-2.3-2.3-.85 2.3-.85.85-2.3z"/>',
+    pauseRing:'<circle cx="12" cy="12" r="8.6"/><path d="M10.1 9v6M13.9 9v6"/>',
+    medal:    '<circle cx="12" cy="9.3" r="5.6"/><path d="M8.5 14.1L7.1 21.2l4.9-2.5 4.9 2.5-1.4-7.1"/>'
+  };
+
+  function svg(name, cls) {
+    return '<svg class="' + (cls || "icon") + '" viewBox="0 0 24 24" aria-hidden="true">' + ICON[name] + '</svg>';
   }
+
+  /* ==========================================================
+     Tabellen & Hilfsmittel
+     ========================================================== */
+
+  var BOX = new Uint8Array(81);
+  for (var i0 = 0; i0 < 81; i0++) BOX[i0] = Math.floor(i0 / 27) * 3 + Math.floor((i0 % 9) / 3);
 
   var BITVAL = {};
-  for (var v0 = 1; v0 <= 9; v0++) { BITVAL[1 << v0] = v0; }
+  for (var v0 = 1; v0 <= 9; v0++) BITVAL[1 << v0] = v0;
 
-  function popcount(x) {
-    var c = 0;
-    while (x) { x &= x - 1; c++; }
-    return c;
-  }
+  function popcount(x) { var c = 0; while (x) { x &= x - 1; c++; } return c; }
 
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
@@ -1020,7 +825,6 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     return arr;
   }
 
-  // Nachbarschaft: 20 Zellen je Zelle (Zeile, Spalte, Block)
   var PEERS = (function () {
     var out = [];
     for (var i = 0; i < 81; i++) {
@@ -1052,15 +856,11 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     var rows = new Int16Array(9), cols = new Int16Array(9), boxes = new Int16Array(9);
     for (var i = 0; i < 81; i++) {
       var v = g[i];
-      if (v) {
-        var b = 1 << v;
-        rows[(i / 9) | 0] |= b; cols[i % 9] |= b; boxes[BOX[i]] |= b;
-      }
+      if (v) { var b = 1 << v; rows[(i / 9) | 0] |= b; cols[i % 9] |= b; boxes[BOX[i]] |= b; }
     }
     return { rows: rows, cols: cols, boxes: boxes };
   }
 
-  // Zählt Lösungen bis höchstens `limit` (Abbruch danach).
   function countSolutions(grid, limit) {
     var g = grid.slice();
     var m = masksOf(g), rows = m.rows, cols = m.cols, boxes = m.boxes;
@@ -1073,10 +873,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
         var avail = (~(rows[(i / 9) | 0] | cols[i % 9] | boxes[BOX[i]])) & 0x3FE;
         var n = popcount(avail);
         if (n === 0) return;
-        if (n < bestCount) {
-          bestCount = n; best = i; bestMask = avail;
-          if (n === 1) break;
-        }
+        if (n < bestCount) { bestCount = n; best = i; bestMask = avail; if (n === 1) break; }
       }
       if (best === -1) { count++; return; }
       var r = (best / 9) | 0, c = best % 9, b = BOX[best], mask = bestMask;
@@ -1146,7 +943,6 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
       }
       if (progress || !useHidden) continue;
 
-      // versteckte Einer: eine Ziffer, die in einer Einheit nur an einer Stelle passt
       for (var u = 0; u < 27 && !progress; u++) {
         var idxs = [];
         for (var k = 0; k < 9; k++) {
@@ -1193,11 +989,8 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
         if (puz[i] === 0) continue;
         var saved = puz[i];
         puz[i] = 0;
-        if (countSolutions(puz, 2) !== 1) {
-          puz[i] = saved;
-        } else {
-          clues--;
-        }
+        if (countSolutions(puz, 2) !== 1) puz[i] = saved;
+        else clues--;
       }
     }
     return puz;
@@ -1221,7 +1014,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
      Zustand
      ========================================================== */
 
-  var STORE = "sudoku.tinte.v1";
+  var STORE = "sudoku.m3.compact";
 
   var solution = new Uint8Array(81);
   var board = new Uint8Array(81);
@@ -1241,17 +1034,27 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   var settings = { check: true, clean: true, same: true };
 
   /* ==========================================================
-     Aufbau der Oberfläche
+     Aufbau
      ========================================================== */
 
+  var appEl = $("#app");
   var boardEl = $("#board");
-  var padEl = $("#pad");
+  var keysEl = $("#keys");
+  var toolsEl = $("#tools");
   var veilEl = $("#veil");
   var veilPanel = $("#veilPanel");
   var messageEl = $("#message");
   var timerEl = $("#timer");
   var mistakesEl = $("#mistakes");
   var diffLabelEl = $("#diffLabel");
+  var frameEl = $("#frame");
+  var stageEl = $("#stage");
+  var btnPause = $("#btnPause");
+  var btnMenu = $("#btnMenu");
+  var sheetEl = $("#sheet");
+  var scrimEl = $("#scrim");
+
+  btnMenu.innerHTML = svg("tune");
 
   var cells = [];
   (function buildBoard() {
@@ -1291,7 +1094,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   })();
 
   var keys = [];
-  (function buildPad() {
+  (function buildKeys() {
     for (var n = 1; n <= 9; n++) {
       var b = document.createElement("button");
       b.className = "key";
@@ -1299,14 +1102,51 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
       b.dataset.n = String(n);
       b.setAttribute("aria-label", "Ziffer " + n);
       var num = document.createElement("span");
+      num.className = "key-num";
       num.textContent = String(n);
       var left = document.createElement("span");
-      left.className = "left";
+      left.className = "key-left";
       b.appendChild(num);
       b.appendChild(left);
-      padEl.appendChild(b);
+      keysEl.appendChild(b);
       keys.push({ el: b, left: left, n: n });
     }
+  })();
+
+  var TOOLS = [
+    { id: "notes",   icon: "notes", label: "Notizen",  title: "Notizmodus (N)" },
+    { id: "erase",   icon: "erase", label: "Löschen",  title: "Zelle leeren (Entf)" },
+    { id: "hint",    icon: "hint",  label: "Tipp",     title: "Tipp (H)" },
+    { id: "undo",    icon: "undo",  label: "Zurück",   title: "Rückgängig (Strg+Z)" },
+    { id: "redo",    icon: "redo",  label: "Vor",      title: "Wiederholen" },
+    { id: "best",    icon: "timer", label: "Bestzeit", title: "Bestzeit dieses Grades" }
+  ];
+  var toolBtn = {};
+  TOOLS.forEach(function (t) {
+    var b = document.createElement("button");
+    b.className = "tool";
+    b.type = "button";
+    b.title = t.title;
+    b.setAttribute("aria-label", t.label);
+    b.innerHTML = svg(t.icon) + '<span class="tool-label">' + t.label + "</span>";
+    toolsEl.appendChild(b);
+    toolBtn[t.id] = b;
+  });
+
+  var segs = [];
+  (function buildSegs() {
+    var picker = $("#diffPicker");
+    Object.keys(DIFFS).forEach(function (k) {
+      var b = document.createElement("button");
+      b.className = "seg";
+      b.type = "button";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", "false");
+      b.dataset.diff = k;
+      b.innerHTML = svg("check", "icon check") + "<span>" + DIFFS[k].label + "</span>";
+      picker.appendChild(b);
+      segs.push(b);
+    });
   })();
 
   /* ==========================================================
@@ -1316,18 +1156,10 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   function save() {
     try {
       localStorage.setItem(STORE + ".game", JSON.stringify({
-        solution: Array.from(solution),
-        board: Array.from(board),
-        given: Array.from(given),
-        notes: Array.from(notes),
-        wrong: Array.from(wrong),
-        revealed: Array.from(revealed),
-        difficulty: difficulty,
-        elapsed: elapsed,
-        mistakes: mistakes,
-        hints: hints,
-        won: won,
-        selected: selected
+        solution: Array.from(solution), board: Array.from(board), given: Array.from(given),
+        notes: Array.from(notes), wrong: Array.from(wrong), revealed: Array.from(revealed),
+        difficulty: difficulty, elapsed: elapsed, mistakes: mistakes, hints: hints,
+        won: won, selected: selected
       }));
     } catch (e) { /* Speicher nicht verfügbar — Spiel läuft trotzdem */ }
   }
@@ -1346,10 +1178,10 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
       if (b) best = JSON.parse(b) || {};
       var s = localStorage.getItem(STORE + ".settings");
       if (s) {
-        var parsed = JSON.parse(s) || {};
-        if (typeof parsed.check === "boolean") settings.check = parsed.check;
-        if (typeof parsed.clean === "boolean") settings.clean = parsed.clean;
-        if (typeof parsed.same === "boolean") settings.same = parsed.same;
+        var p = JSON.parse(s) || {};
+        ["check", "clean", "same"].forEach(function (k) {
+          if (typeof p[k] === "boolean") settings[k] = p[k];
+        });
       }
       var nd = localStorage.getItem(STORE + ".next");
       if (nd && DIFFS[nd]) nextDifficulty = nd;
@@ -1400,6 +1232,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     var conf = conflictSet();
     var selR = (selected / 9) | 0, selC = selected % 9, selB = BOX[selected];
     var selVal = board[selected];
+    var hidden = paused || busy;
 
     for (var i = 0; i < 81; i++) {
       var el = cells[i];
@@ -1412,22 +1245,18 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
       if (conf[i]) cl += " conflict";
       if (wrong[i] && v) cl += " wrong";
 
-      if (i === selected) {
-        cl += " sel";
-      } else if (settings.same && selVal && v === selVal) {
-        cl += " same";
-      } else if (((i / 9) | 0) === selR || i % 9 === selC || BOX[i] === selB) {
-        cl += " peer";
-      }
+      if (i === selected) cl += " sel";
+      else if (settings.same && selVal && v === selVal) cl += " same";
+      else if (((i / 9) | 0) === selR || i % 9 === selC || BOX[i] === selB) cl += " peer";
 
       if (el.className !== cl) el.className = cl;
 
       var valEl = el.lastChild;
-      var text = v ? String(v) : "";
+      var text = (hidden || !v) ? "" : String(v);
       if (valEl.textContent !== text) valEl.textContent = text;
 
       var noteEls = el.firstChild.childNodes;
-      var mask = v ? 0 : notes[i];
+      var mask = (hidden || v) ? 0 : notes[i];
       for (var n = 1; n <= 9; n++) {
         var on = (mask & (1 << n)) !== 0;
         var ne = noteEls[n - 1];
@@ -1441,7 +1270,6 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
         (v ? v + (given[i] ? " vorgegeben" : "") : "leer"));
     }
 
-    // Ziffernblock: verbleibende Anzahl je Ziffer
     var used = new Uint8Array(10);
     for (var j = 0; j < 81; j++) if (board[j]) used[board[j]]++;
     for (var k2 = 0; k2 < keys.length; k2++) {
@@ -1449,19 +1277,25 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
       keys[k2].left.textContent = left > 0 ? String(left) : "";
       keys[k2].el.classList.toggle("done", left <= 0);
     }
-    padEl.classList.toggle("notes-mode", notesMode);
+    keysEl.classList.toggle("notes-mode", notesMode);
 
-    mistakesEl.textContent = String(mistakes);
-    mistakesEl.classList.toggle("is-alert", mistakes > 0);
-    diffLabelEl.textContent = DIFFS[difficulty].label;
     timerEl.textContent = fmtTime(elapsed);
+    mistakesEl.textContent = String(mistakes);
+    mistakesEl.classList.toggle("is-error", mistakes > 0);
+    diffLabelEl.textContent = DIFFS[difficulty].label;
 
-    $("#btnUndo").disabled = history.length === 0 || won;
-    $("#btnRedo").disabled = future.length === 0 || won;
-    $("#btnHint").disabled = won || paused;
-    $("#btnNotes").setAttribute("aria-pressed", notesMode ? "true" : "false");
-    $("#btnPause").setAttribute("aria-pressed", paused ? "true" : "false");
-    $("#btnPause").disabled = won;
+    toolBtn.notes.classList.toggle("on", notesMode);
+    toolBtn.notes.setAttribute("aria-pressed", notesMode ? "true" : "false");
+    toolBtn.hint.disabled = won || paused;
+    toolBtn.undo.disabled = !history.length || won;
+    toolBtn.redo.disabled = !future.length || won;
+
+    btnPause.innerHTML = svg(paused ? "play" : "pause");
+    btnPause.setAttribute("aria-label", paused ? "Weiterspielen" : "Pause");
+    btnPause.classList.toggle("on", paused);
+    btnPause.disabled = won;
+
+    boardEl.classList.toggle("solved", won);
   }
 
   var messageTimer = null;
@@ -1516,7 +1350,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   }
 
   function placeValue(i, v) {
-    if (won || paused || given[i]) return;
+    if (won || paused || busy || given[i]) return;
     if (board[i] === v) { clearCell(i); return; }
 
     var touched = [i];
@@ -1534,9 +1368,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     if (wrong[i]) mistakes++;
 
     if (settings.clean && v) {
-      PEERS[i].forEach(function (j) {
-        if (!board[j]) notes[j] &= ~(1 << v);
-      });
+      PEERS[i].forEach(function (j) { if (!board[j]) notes[j] &= ~(1 << v); });
     }
 
     commit(before);
@@ -1545,7 +1377,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   }
 
   function toggleNote(i, v) {
-    if (won || paused || given[i] || board[i]) return;
+    if (won || paused || busy || given[i] || board[i]) return;
     var before = snapshot([i]);
     notes[i] ^= (1 << v);
     commit(before);
@@ -1553,7 +1385,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   }
 
   function clearCell(i) {
-    if (won || paused || given[i]) return;
+    if (won || paused || busy || given[i]) return;
     if (!board[i] && !notes[i]) return;
     var before = snapshot([i]);
     board[i] = 0; notes[i] = 0; wrong[i] = 0; revealed[i] = 0;
@@ -1562,7 +1394,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   }
 
   function hint() {
-    if (won || paused) return;
+    if (won || paused || busy) return;
     var target = -1;
     if (!given[selected] && board[selected] !== solution[selected]) {
       target = selected;
@@ -1573,8 +1405,8 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
       target = open[Math.floor(Math.random() * open.length)];
     }
 
-    var touched = [target];
     var v = solution[target];
+    var touched = [target];
     PEERS[target].forEach(function (j) {
       if (!board[j] && (notes[j] & (1 << v))) touched.push(j);
     });
@@ -1634,9 +1466,10 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     paused = state;
     if (paused) {
       showVeil(
+        svg("pauseRing", "icon veil-icon") +
         '<span class="veil-title">Pause</span>' +
         '<p class="veil-note">Die Uhr steht.</p>' +
-        '<button class="btn" type="button" id="veilResume">Weiterspielen</button>'
+        '<button class="btn-filled" type="button" id="veilResume" style="width:auto;height:48px;border-radius:24px;padding:0 26px;font-size:15px;font-weight:600">Weiterspielen</button>'
       );
       var btn = $("#veilResume");
       btn.addEventListener("click", function () { setPaused(false); });
@@ -1666,22 +1499,22 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
           cells[j].classList.remove("wave");
           cells[j].style.animationDelay = "";
         }
-      }, 1400);
+      }, 1500);
     }
-    boardEl.classList.add("solved");
 
     showVeil(
+      svg("medal", "icon veil-icon") +
       '<span class="veil-title">Gelöst</span>' +
-      '<div class="veil-stats">' +
-        '<span>Zeit <b>' + fmtTime(elapsed) + '</b></span>' +
-        '<span>Fehler <b>' + mistakes + '</b></span>' +
-        '<span>Tipps <b>' + hints + '</b></span>' +
+      '<div class="veil-chips">' +
+        '<span class="chip">Zeit ' + fmtTime(elapsed) + '</span>' +
+        '<span class="chip">Fehler ' + mistakes + '</span>' +
+        '<span class="chip">Tipps ' + hints + '</span>' +
       '</div>' +
       '<p class="veil-note">' +
         (isBest ? "Neue Bestzeit für " + DIFFS[key].label + "."
                 : "Bestzeit " + DIFFS[key].label + ": " + fmtTime(best[key]) + ".") +
       '</p>' +
-      '<button class="btn" type="button" id="veilNew">Nächstes Rätsel</button>'
+      '<button class="btn-filled" type="button" id="veilNew" style="width:auto;height:48px;border-radius:24px;padding:0 26px;font-size:15px;font-weight:600">Nächstes Rätsel</button>'
     );
     var btn = $("#veilNew");
     btn.addEventListener("click", function () { newGame(nextDifficulty); });
@@ -1708,16 +1541,19 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     won = false; paused = false;
     selected = 40;
     for (var j = 0; j < 81; j++) { if (!given[j]) { selected = j; break; } }
-    boardEl.classList.remove("solved");
   }
 
   function newGame(diff) {
     if (busy) return;
     busy = true;
     hideVeil();
-    boardEl.classList.remove("solved");
-    showVeil('<span class="veil-title">Rätsel wird erzeugt</span><p class="veil-note">Einen Moment — das Gitter muss eindeutig lösbar sein.</p>');
+    showVeil(
+      svg("sparkle", "icon veil-icon") +
+      '<span class="veil-title">Rätsel wird erzeugt</span>' +
+      '<p class="veil-note">Einen Moment — das Gitter muss eindeutig lösbar sein.</p>'
+    );
     say("");
+    render();
 
     setTimeout(function () {
       var data = makePuzzle(diff);
@@ -1727,7 +1563,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
       var clues = 0;
       for (var i = 0; i < 81; i++) if (given[i]) clues++;
       say(DIFFS[diff].label + " — " + clues + " vorgegebene Zahlen.");
-      render(); save();
+      render(); save(); scheduleFit();
       cells[selected].focus({ preventScroll: true });
     }, 40);
   }
@@ -1740,11 +1576,62 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     history = []; future = [];
     elapsed = 0; mistakes = 0; hints = 0;
     won = false; paused = false;
-    boardEl.classList.remove("solved");
     hideVeil();
     say("Von vorn — dasselbe Rätsel, leeres Blatt.");
     render(); save();
   }
+
+  /* ==========================================================
+     Brett auf die freie Höhe einpassen
+     ========================================================== */
+
+  function fitBoard() {
+    // Die Höhe der Bühne steht durch das Flex-Layout fest und hängt nicht an
+    // der Brettbreite — Messen erzeugt also keine Rückkopplung. Wichtig ist,
+    // dass .stage über align-items:stretch die volle Breite behält.
+    var msgH = messageEl.offsetHeight;
+    var cs = getComputedStyle(stageEl);
+    var padX = parseFloat(cs.paddingLeft || 0) + parseFloat(cs.paddingRight || 0);
+    var w = stageEl.clientWidth - padX;
+    var h = stageEl.clientHeight - msgH - (msgH ? 8 : 0);
+    var size = Math.max(160, Math.floor(Math.min(w, h, 660)));
+    frameEl.style.width = size + "px";
+    appEl.style.setProperty("--fit-w", size + "px");
+  }
+
+  var fitPending = false;
+  function scheduleFit() {
+    if (fitPending) return;
+    fitPending = true;
+    requestAnimationFrame(function () { fitPending = false; fitBoard(); });
+  }
+
+  window.addEventListener("resize", scheduleFit);
+  window.addEventListener("orientationchange", scheduleFit);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", scheduleFit);
+  if (window.ResizeObserver) new ResizeObserver(scheduleFit).observe(appEl);
+
+  /* ==========================================================
+     Menü-Blatt
+     ========================================================== */
+
+  function sheetOpen() { return sheetEl.classList.contains("open"); }
+
+  function setSheet(open) {
+    sheetEl.classList.toggle("open", open);
+    scrimEl.classList.toggle("on", open);
+    btnMenu.setAttribute("aria-expanded", open ? "true" : "false");
+    btnMenu.setAttribute("aria-label", open ? "Menü schließen" : "Menü öffnen");
+    if (open) {
+      var first = sheetEl.querySelector(".seg[aria-checked='true']") || sheetEl.querySelector("button");
+      if (first) first.focus({ preventScroll: true });
+    } else {
+      btnMenu.focus({ preventScroll: true });
+    }
+  }
+
+  btnMenu.addEventListener("click", function () { setSheet(!sheetOpen()); });
+  scrimEl.addEventListener("click", function () { setSheet(false); });
 
   /* ==========================================================
      Eingabe
@@ -1758,7 +1645,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     el.focus({ preventScroll: true });
   });
 
-  padEl.addEventListener("click", function (e) {
+  keysEl.addEventListener("click", function (e) {
     var el = e.target.closest(".key");
     if (!el || paused || busy || won) return;
     var n = Number(el.dataset.n);
@@ -1774,6 +1661,12 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     selected = r * 9 + c;
     render();
     cells[selected].focus({ preventScroll: true });
+  }
+
+  function setNotesMode(state) {
+    notesMode = state;
+    render();
+    say(notesMode ? "Notizmodus: Ziffern werden als Kandidaten eingetragen." : "Normalmodus.");
   }
 
   document.addEventListener("keydown", function (e) {
@@ -1828,12 +1721,6 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
     if (k === "0") { e.preventDefault(); clearCell(selected); }
   });
 
-  function setNotesMode(state) {
-    notesMode = state;
-    render();
-    say(notesMode ? "Notizmodus: Ziffern werden als Kandidaten eingetragen." : "Normalmodus.");
-  }
-
   document.addEventListener("visibilitychange", function () {
     if (document.hidden && !won && !paused && !busy) setPaused(true);
   });
@@ -1842,16 +1729,22 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
      Schalter
      ========================================================== */
 
-  $("#btnNotes").addEventListener("click", function () { setNotesMode(!notesMode); });
-  $("#btnErase").addEventListener("click", function () { clearCell(selected); });
-  $("#btnHint").addEventListener("click", hint);
-  $("#btnUndo").addEventListener("click", undo);
-  $("#btnRedo").addEventListener("click", redo);
-  $("#btnPause").addEventListener("click", function () { setPaused(!paused); });
+  toolBtn.notes.addEventListener("click", function () { setNotesMode(!notesMode); });
+  toolBtn.erase.addEventListener("click", function () { clearCell(selected); });
+  toolBtn.hint.addEventListener("click", hint);
+  toolBtn.undo.addEventListener("click", undo);
+  toolBtn.redo.addEventListener("click", redo);
+  toolBtn.best.addEventListener("click", function () {
+    var b = best[difficulty];
+    say(typeof b === "number"
+      ? "Bestzeit " + DIFFS[difficulty].label + ": " + fmtTime(b) + "."
+      : "Noch keine Bestzeit für " + DIFFS[difficulty].label + ".");
+  });
+
+  btnPause.addEventListener("click", function () { setPaused(!paused); });
   $("#btnNew").addEventListener("click", function () { setSheet(false); newGame(nextDifficulty); });
   $("#btnRestart").addEventListener("click", function () { setSheet(false); restart(); });
 
-  var segs = Array.prototype.slice.call(document.querySelectorAll(".seg"));
   segs.forEach(function (s) {
     s.addEventListener("click", function () {
       nextDifficulty = s.dataset.diff;
@@ -1859,7 +1752,7 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
         o.setAttribute("aria-checked", o === s ? "true" : "false");
       });
       saveMeta();
-      say("Nächstes Rätsel: " + DIFFS[nextDifficulty].label + ". Mit „Rätsel erzeugen“ starten.");
+      say("Nächstes Rätsel: " + DIFFS[nextDifficulty].label + ".");
     });
   });
 
@@ -1875,72 +1768,13 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   }
 
   bindSwitch("#setCheck", "check", function () {
-    if (settings.check) {
-      for (var i = 0; i < 81; i++) wrong[i] = (board[i] && !given[i] && board[i] !== solution[i]) ? 1 : 0;
-    } else {
-      wrong.fill(0);
+    for (var i = 0; i < 81; i++) {
+      wrong[i] = (settings.check && board[i] && !given[i] && board[i] !== solution[i]) ? 1 : 0;
     }
     save();
   });
   bindSwitch("#setClean", "clean");
   bindSwitch("#setSame", "same");
-
-  /* ==========================================================
-     Handy-Layout: Brett auf die freie Höhe einpassen
-     ========================================================== */
-
-  var boardFrame = $(".board-frame");
-  var boardColumn = $(".board-column");
-  var mqNarrow = window.matchMedia("(max-width: 859px)");
-
-  function fitBoard() {
-    if (!mqNarrow.matches) { boardFrame.style.width = ""; return; }
-    // Die Spaltenhöhe steht durch das Flex-Layout fest und hängt nicht an der
-    // Brettbreite — Messen erzeugt also keine Rückkopplung.
-    var msgH = messageEl.offsetHeight;
-    var avail = boardColumn.clientHeight - msgH - (msgH ? 6 : 0);
-    var size = Math.min(boardColumn.clientWidth, avail);
-    boardFrame.style.width = Math.max(160, Math.floor(size)) + "px";
-  }
-
-  var fitPending = false;
-  function scheduleFit() {
-    if (fitPending) return;
-    fitPending = true;
-    requestAnimationFrame(function () { fitPending = false; fitBoard(); });
-  }
-
-  window.addEventListener("resize", scheduleFit);
-  window.addEventListener("orientationchange", scheduleFit);
-  if (window.visualViewport) window.visualViewport.addEventListener("resize", scheduleFit);
-  if (mqNarrow.addEventListener) mqNarrow.addEventListener("change", scheduleFit);
-
-  /* ==========================================================
-     Menü-Blatt (nur am Handy sichtbar)
-     ========================================================== */
-
-  var sheet = $("#sheet");
-  var backdrop = $("#sheetBackdrop");
-  var btnMenu = $("#btnMenu");
-
-  function sheetOpen() { return sheet.classList.contains("open"); }
-
-  function setSheet(open) {
-    sheet.classList.toggle("open", open);
-    backdrop.classList.toggle("on", open);
-    btnMenu.setAttribute("aria-expanded", open ? "true" : "false");
-    btnMenu.setAttribute("aria-label", open ? "Menü schließen" : "Menü öffnen");
-    if (open) {
-      var first = sheet.querySelector(".seg[aria-checked='true']") || sheet.querySelector("button");
-      if (first) first.focus({ preventScroll: true });
-    } else if (mqNarrow.matches) {
-      btnMenu.focus({ preventScroll: true });
-    }
-  }
-
-  btnMenu.addEventListener("click", function () { setSheet(!sheetOpen()); });
-  $("#btnSheetClose").addEventListener("click", function () { setSheet(false); });
-  backdrop.addEventListener("click", function () { setSheet(false); });
 
   /* ==========================================================
      Start
@@ -1953,12 +1787,8 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
 
   if (loadGame()) {
     render();
-    if (won) {
-      boardEl.classList.add("solved");
-      say("Fortgesetztes Spiel — bereits gelöst. Starte ein neues Rätsel.", true);
-    } else {
-      say("Gespeichertes Spiel fortgesetzt.");
-    }
+    if (won) say("Fortgesetztes Spiel — bereits gelöst. Starte ein neues Rätsel.", true);
+    else say("Gespeichertes Spiel fortgesetzt.");
     startClock();
   } else {
     startClock();
@@ -1966,7 +1796,6 @@ details.help summary:focus-visible { outline: 2px solid var(--accent-2); outline
   }
 
   scheduleFit();
-
   window.addEventListener("beforeunload", save);
 })();
 </script>
