@@ -107,10 +107,45 @@ Einstellungen und Tastaturhilfe liegen im Menü-Blatt, das von unten einfährt.
 
 - **Notizen** (Kandidaten) mit automatischer Bereinigung in Zeile, Spalte, Block
 - **Rückgängig/Wiederholen** über die ganze Partie, inklusive Fehler- und Tippzähler
-- **Tipps**, Fehlermarkierung, Uhr mit Pause, Bestzeiten je Grad
+- **Tipps**, Uhr mit Pause, Bestzeiten je Grad
+- **Fehleranzeige** in zwei Rollen, siehe unten
 - **Tastatur** vollständig: Pfeiltasten, 1–9, Umschalt+Ziffer für Notizen,
   0/⌫, N, H, Strg+Z, Leertaste, Esc
 - **Spielstand** wird lokal gesichert und beim nächsten Aufruf fortgesetzt
+
+## Fehleranzeige
+
+Zwei Rollen, klar getrennt:
+
+| | Darstellung |
+|---|---|
+| **die falsch gesetzte Zahl** — weicht von der Lösung ab | rote Ziffer, roter Rahmen, blitzt eine Sekunde lang dreimal auf; der Rahmen bleibt bis zur Berichtigung |
+| **die Ursachen** — dieselbe Zahl steht schon in Zeile, Spalte oder Block | rot hinterlegt, Ziffer in normaler Schriftfarbe; bleibt bis der Fehler behoben ist |
+
+Die Zuordnung ist eindeutig: von zwei gleichen Zahlen in einer Einheit kann nur
+eine zur Lösung passen. Beide Markierungen ergeben sich aus dem Brettzustand und
+verschwinden von selbst, sobald berichtigt wurde.
+
+Die Rahmenregel steht im Stylesheet **nach** der Auswahlregel. Das ist keine
+Kosmetik: die gerade gesetzte Zahl steht immer in der gewählten Zelle, und dort
+gewann sonst die Farbe der Auswahl — die falsche Zahl war deshalb nie rot.
+
+Ohne die Einstellung *Falsche Eingaben sofort markieren* kennt das Spiel kein
+„falsch" gegenüber der Lösung. Dann werden nur Regelverstöße angezeigt: beide
+Seiten einer doppelten Zahl werden rot hinterlegt, ohne Rahmen und ohne Blitzen.
+
+## Spielstand
+
+Das laufende Spiel wird auf dem Gerät gespeichert und beim nächsten Aufruf
+fortgesetzt — Brett, Notizen, Fehlermarkierungen, verstrichene Zeit, Fehler- und
+Tippzähler, Schwierigkeitsgrad und die gewählte Zelle. Gesichert wird nach jedem
+Zug, alle zehn Sekunden und beim Verlassen der Seite. Bestzeiten und
+Einstellungen liegen daneben.
+
+Gespeichert wird in `localStorage`, also lokal und ohne Konto; es wird nichts
+übertragen und nichts zwischen Geräten abgeglichen. Zusätzlich bittet die App
+über `navigator.storage.persist()` darum, den Speicher nicht unter Speicherdruck
+zu verwerfen — für installierte Web-Apps wird das in der Regel gewährt.
 
 ## Am Handy
 

@@ -51,6 +51,7 @@
   --surface-container-high: #e9e7ef;
   --surface-container-highest: #e3e2e9;
   --success: #146b4e;
+  --error-flash: rgba(186, 26, 26, .24);
   --paper: #dfe4ee;
   --grid-line: rgba(31, 41, 63, .055);
   --scrim: rgba(0, 0, 0, .42);
@@ -89,6 +90,7 @@
     --surface-container-high: #292a2f;
     --surface-container-highest: #34343a;
     --success: #8bd6b0;
+    --error-flash: rgba(255, 180, 171, .26);
     --paper: #0e131a;
     --grid-line: rgba(180, 200, 235, .045);
     --scrim: rgba(0, 0, 0, .55);
@@ -113,6 +115,7 @@
   --surface-container-high: #292a2f;
   --surface-container-highest: #34343a;
   --success: #8bd6b0;
+  --error-flash: rgba(255, 180, 171, .26);
   --paper: #0e131a;
   --grid-line: rgba(180, 200, 235, .045);
   --scrim: rgba(0, 0, 0, .55);
@@ -389,8 +392,13 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 
 .cell.peer { background: var(--surface-container-high); }
 .cell.same { background: var(--secondary-container); }
-.cell.wrong { background: var(--error-container); }
 .cell.sel  { background: var(--primary-container); }
+
+/* Ursachen des Fehlers: rot hinterlegt. Steht NACH .sel, damit die rote
+   Fläche auch dann bleibt, wenn man die Zelle anwählt — sie soll ja bis zur
+   Behebung sichtbar sein. */
+.cell.cause { background: var(--error-container); }
+
 .cell.sel::after {
   content: "";
   position: absolute;
@@ -400,6 +408,29 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   z-index: 2;
 }
 
+/* Rote Umrahmung der falsch gesetzten Zahl. Muss NACH .sel::after stehen:
+   die gerade gesetzte Zahl steht immer in der gewählten Zelle, und dort
+   gewann sonst der Auswahlrahmen. */
+.cell.wrong::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 2px var(--error);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Eine Sekunde lang aufblitzen — drei Schläge, danach bleibt der Rahmen. */
+@keyframes errBlink {
+  0%   { box-shadow: inset 0 0 0 3px var(--error); background: var(--error-flash); }
+  17%  { box-shadow: inset 0 0 0 2px var(--error); background: transparent; }
+  34%  { box-shadow: inset 0 0 0 3px var(--error); background: var(--error-flash); }
+  51%  { box-shadow: inset 0 0 0 2px var(--error); background: transparent; }
+  68%  { box-shadow: inset 0 0 0 3px var(--error); background: var(--error-flash); }
+  100% { box-shadow: inset 0 0 0 2px var(--error); background: transparent; }
+}
+.cell.wrong.blink::after { animation: errBlink 1s ease-in-out both; }
+
 .val {
   font-size: clamp(13px, 5vw, 34px);
   line-height: 1;
@@ -408,8 +439,15 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 }
 .cell.given .val { color: var(--on-surface); font-weight: 600; }
 .cell.revealed .val { color: var(--success); }
-.cell.conflict .val, .cell.wrong .val { color: var(--error); }
 .cell.sel .val { color: var(--on-primary-container); }
+/* Ursachen behalten die normale Schriftfarbe — rot ist nur die Fläche unter
+   ihnen. Bewusst on-surface und nicht on-error-container: das wäre mit
+   #410002 ein Rotstich, hier soll die Ziffer schwarz bleiben wie zuvor.
+   In Dunkel ist on-surface hell und auf der roten Fläche gut lesbar. */
+.cell.cause .val { color: var(--on-surface); }
+/* Die falsch gesetzte Zahl selbst ist rot. Nach .sel, sonst gewinnt dort
+   die Farbe der Auswahl. */
+.cell.wrong .val { color: var(--error); }
 .board.solved .val { color: var(--success); }
 
 .notes {
@@ -1144,6 +1182,9 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   var best = {};
   var settings = { check: true, clean: true, same: true, julia: false };
 
+  // Zelle, die gerade eine Sekunde lang rot aufblitzt (-1 = keine)
+  var blinkIndex = -1, blinkTimer = null;
+
   // Julia-Modus schaltet die Rosé-Palette am Wurzelelement ein. Bewusst dort
   // und nicht an .app, damit der Seitengrund des Dokuments mitwechselt.
   function applyMode() {
@@ -1372,8 +1413,21 @@ svg.icon .fill { fill: currentColor; stroke: none; }
       if (given[i]) cl += " given";
       if (revealed[i]) cl += " revealed";
       if (v) cl += " has-value";
-      if (conf[i]) cl += " conflict";
-      if (wrong[i] && v) cl += " wrong";
+
+      // Zwei Rollen unterscheiden:
+      //   wrong — die falsch gesetzte Zahl (weicht von der Lösung ab)
+      //   cause — die Zahlen, an denen es scheitert: sie stehen doppelt in
+      //           Zeile, Spalte oder Block, sind aber selbst richtig
+      // Bei zwei gleichen Zahlen in einer Einheit kann nur eine zur Lösung
+      // passen, die Zuordnung ist also eindeutig. Beides ergibt sich aus dem
+      // Brettzustand und verschwindet damit von selbst, sobald der Fehler
+      // behoben ist.
+      var isWrong = (wrong[i] && v) ? 1 : 0;
+      if (isWrong) cl += " wrong";
+      else if (conf[i]) cl += " cause";
+      // Das Aufblitzen muss ein zwischenzeitliches Neuzeichnen überleben,
+      // sonst bricht es ab, sobald sich sonst etwas ändert.
+      if (isWrong && i === blinkIndex) cl += " blink";
 
       if (i === selected) cl += " sel";
       else if (settings.same && selVal && v === selVal) cl += " same";
@@ -1395,9 +1449,12 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 
       el.tabIndex = (i === selected) ? 0 : -1;
       el.setAttribute("aria-selected", i === selected ? "true" : "false");
+      if (isWrong) el.setAttribute("aria-invalid", "true");
+      else el.removeAttribute("aria-invalid");
       el.setAttribute("aria-label",
         "Zeile " + (((i / 9) | 0) + 1) + ", Spalte " + ((i % 9) + 1) + ", " +
-        (v ? v + (given[i] ? " vorgegeben" : "") : "leer"));
+        (v ? v + (given[i] ? " vorgegeben" : "") : "leer") +
+        (isWrong ? ", falsch" : (conf[i] && v ? ", doppelt" : "")));
     }
 
     var used = new Uint8Array(10);
@@ -1426,6 +1483,23 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     btnPause.disabled = won;
 
     boardEl.classList.toggle("solved", won);
+  }
+
+  // Eine Sekunde rot aufblitzen lassen. Danach bleibt der rote Rahmen, bis
+  // die Zahl berichtigt ist.
+  function flashWrong(i) {
+    if (blinkTimer) clearTimeout(blinkTimer);
+    blinkIndex = i;
+    var el = cells[i];
+    el.classList.remove("blink");
+    void el.offsetWidth;                 // erzwingt einen Neustart der Animation
+    el.classList.add("blink");
+    blinkTimer = setTimeout(function () {
+      blinkTimer = null;
+      var was = blinkIndex;
+      blinkIndex = -1;
+      if (was >= 0 && cells[was]) cells[was].classList.remove("blink");
+    }, 1050);
   }
 
   var messageTimer = null;
@@ -1503,6 +1577,7 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 
     commit(before);
     render(); save();
+    if (wrong[i] && v) flashWrong(i);
     checkComplete();
   }
 
@@ -1954,6 +2029,13 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("sw.js").catch(function () { /* nicht verfügbar — Spiel läuft trotzdem */ });
     });
+  }
+
+  // Der Spielstand liegt im lokalen Speicher des Geräts. Browser dürfen den
+  // unter Speicherdruck verwerfen; mit persist() bitten wir darum, ihn zu
+  // behalten. Für installierte Web-Apps wird das in der Regel gewährt.
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(function () { /* nicht unterstützt */ });
   }
 })();
 </script>
