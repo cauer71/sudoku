@@ -1,0 +1,11 @@
+{
+  "name": "sudoku",
+  "private": true,
+  "description": "Sudoku als eigenständige Web-App — ohne Abhängigkeiten und ohne Build-Schritt.",
+  "scripts": {
+    "collect": "node tools/collect.mjs",
+    "dev": "npm run collect && npx wrangler@latest dev",
+    "check": "npm run collect && npx wrangler@latest deploy --dry-run",
+    "deploy": "npm run collect && npx wrangler@latest deploy"
+  }
+}

@@ -2,7 +2,8 @@
 
 Ein vollständiges Sudoku-Spiel in einer einzigen HTML-Datei. Keine
 Abhängigkeiten, kein Build-Schritt, keine Netzwerkaufrufe: `index.html` im
-Browser öffnen, fertig.
+Browser öffnen, fertig. Für die Veröffentlichung auf Cloudflare werden die
+Dateien nur in ein eigenes Verzeichnis kopiert — gebaut wird auch dort nichts.
 
 ## Spielen
 
@@ -11,6 +12,55 @@ open index.html
 ```
 
 Gehostet: **https://cauer71.github.io/sudoku/**
+
+## Auf Cloudflare veröffentlichen
+
+Vorbereitet für **Cloudflare Workers mit statischen Assets** — die für neue
+Projekte empfohlene Betriebsart; Pages ist der ältere Weg.
+
+```bash
+npx wrangler login          # einmalig
+npm run check               # Konfiguration prüfen, ohne zu veröffentlichen
+npm run deploy              # veröffentlichen
+npm run dev                 # lokal unter http://127.0.0.1:8787
+```
+
+Es wird nichts installiert: die Skripte rufen `npx wrangler@latest` auf. Das
+Spiel selbst bleibt ohne Abhängigkeiten.
+
+### Was ausgeliefert wird
+
+Nicht das Wurzelverzeichnis, sondern `dist/` — zusammengestellt von
+`tools/collect.mjs` aus einer **Positivliste** von elf Dateien. Das hat zwei
+Gründe, beide aus der Praxis:
+
+- Eine Ausschlussliste (`.assetsignore`) hätte bedeutet, dass jede künftig im
+  Wurzelverzeichnis abgelegte Datei standardmäßig mit veröffentlicht wird —
+  einschließlich `.git`. Die Positivliste dreht das um.
+- `wrangler dev` überwacht das Asset-Verzeichnis und legt zugleich `.wrangler/`
+  an. Zeigt beides auf dasselbe Verzeichnis, lädt der Server endlos neu.
+
+Die App bleibt im Wurzelverzeichnis, weil GitHub Pages von dort baut. Beide
+Wege laufen parallel aus denselben Dateien; kopiert wird nur, nicht gebaut.
+
+### Einstellungen
+
+| Datei | Zweck |
+|---|---|
+| `wrangler.jsonc` | Name, Asset-Verzeichnis, Fehlerseiten-Verhalten |
+| `_headers` | Cache-Regeln und Sicherheits-Kopfzeilen |
+| `404.html` | eigene Fehlerseite (nutzt auch GitHub Pages) |
+| `tools/collect.mjs` | stellt `dist/` zusammen |
+
+`not_found_handling` steht auf `404-page`, bewusst **nicht** auf
+`single-page-application`: letzteres liefert für jeden unbekannten Pfad
+`index.html` mit Status 200 — auch für ein fehlendes Bild, das dann
+stillschweigend HTML zurückbekäme. Die App hat ohnehin nur eine Seite.
+
+Kopfzeilen: Icons ein Jahr `immutable`, HTML, Service Worker und Manifest
+`must-revalidate` (der Cloudflare-Standard, hier ausdrücklich), dazu `nosniff`,
+`Referrer-Policy`, `X-Frame-Options` und eine strenge CSP ohne fremde Quellen —
+die schreibt fest, dass die App nichts von außen lädt.
 
 ## Installieren
 

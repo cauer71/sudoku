@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nicht gefunden — Sudoku</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#dfe4ee">
+<style>
+/* Gleiche M3-Grundfarben wie das Spiel, hell und dunkel. */
+:root {
+  color-scheme: light;
+  --paper: #dfe4ee; --grid-line: rgba(31, 41, 63, .055);
+  --surface: #eeedf4; --on-surface: #1a1b20; --on-surface-variant: #44464f;
+  --primary: #2b5db0; --on-primary: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0e131a; --grid-line: rgba(180, 200, 235, .045);
+    --surface: #1e1f25; --on-surface: #e3e2e9; --on-surface-variant: #c5c6d0;
+    --primary: #b0c6ff; --on-primary: #002e69;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0e131a; --grid-line: rgba(180, 200, 235, .045);
+  --surface: #1e1f25; --on-surface: #e3e2e9; --on-surface-variant: #c5c6d0;
+  --primary: #b0c6ff; --on-primary: #002e69;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--on-surface);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 28px 28px, 28px 28px;
+  font-family: 'Roboto Flex', Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+main {
+  max-width: 34ch;
+  text-align: center;
+  padding: 28px 24px 24px;
+  border-radius: 16px;
+  background: var(--surface);
+}
+h1 { margin: 0 0 8px; font-size: 22px; line-height: 28px; font-weight: 600; }
+p { margin: 0 0 20px; font-size: 14px; line-height: 20px; color: var(--on-surface-variant); }
+a {
+  display: inline-block;
+  height: 40px; line-height: 40px;
+  padding: 0 24px;
+  border-radius: 20px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 14px; font-weight: 500; letter-spacing: .1px;
+  text-decoration: none;
+}
+a:hover { filter: brightness(1.08); }
+a:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+svg { width: 56px; height: 56px; margin-bottom: 14px; stroke: var(--primary); fill: none; stroke-width: 1.6; stroke-linecap: round; }
+</style>
+</head>
+<body>
+<main>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/>
+    <path d="M9.17 3.5v17M14.83 3.5v17M3.5 9.17h17M3.5 14.83h17"/>
+  </svg>
+  <h1>Diese Seite gibt es nicht</h1>
+  <p>Sudoku hat nur eine Seite — das Spielfeld.</p>
+  <a id="back" href="/">Zum Spiel</a>
+</main>
+<script>
+  // Auf Cloudflare liegt die App unter /, auf GitHub Pages als Projektseite
+  // unter /<repo>/. Dort muss der Link den ersten Pfadabschnitt behalten.
+  if (location.hostname.endsWith("github.io")) {
+    var seg = location.pathname.split("/")[1];
+    if (seg) document.getElementById("back").href = "/" + seg + "/";
+  }
+</script>
+</body>
+</html>

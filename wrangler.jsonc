@@ -1,0 +1,26 @@
+// Cloudflare Workers mit statischen Assets — die für neue Projekte empfohlene
+// Betriebsart (Pages ist der ältere Weg).
+//
+// Ausgeliefert wird dist/, nicht das Wurzelverzeichnis. dist/ stellt
+// tools/collect.mjs aus einer Positivliste zusammen; damit kann nichts
+// versehentlich mit veröffentlicht werden, und `wrangler dev` überwacht nicht
+// das Verzeichnis, in das es selbst schreibt.
+{
+  "name": "sudoku",
+  "compatibility_date": "2026-08-28",
+
+  "assets": {
+    "directory": "./dist",
+
+    // Die App hat nur eine Seite, also keine Client-Routen. Bewusst NICHT
+    // "single-page-application": das liefert für jeden unbekannten Pfad
+    // index.html mit Status 200 — auch für ein fehlendes Bild, das dann
+    // stillschweigend HTML zurückbekommt. Mit "404-page" schlagen echte
+    // Fehler sichtbar fehl und Besucher landen auf 404.html.
+    "not_found_handling": "404-page",
+
+    "html_handling": "auto-trailing-slash"
+  },
+
+  "observability": { "enabled": true }
+}

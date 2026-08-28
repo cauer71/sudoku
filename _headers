@@ -1,0 +1,23 @@
+# Kopfzeilen für Cloudflare Workers (statische Assets).
+# Der Standard ist bereits "public, max-age=0, must-revalidate" mit ETag —
+# richtig für index.html und den Service Worker. Ergänzt wird hier nur, was
+# davon abweichen soll, plus etwas Absicherung.
+
+# Icons sind unveränderlich; ihr Inhalt ändert sich nicht mehr.
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Ausdrücklich kurzlebig, damit Aktualisierungen der App sicher ankommen.
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+/manifest.webmanifest
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: SAMEORIGIN
+  # Die App lädt nichts von außen. Die Regel schreibt das fest: käme je eine
+  # fremde Quelle hinzu, bricht sie sichtbar, statt still zu laden.
+  # 'unsafe-inline' ist nötig, weil Stil und Skript in der Datei stehen.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
