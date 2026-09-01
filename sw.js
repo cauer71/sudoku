@@ -10,25 +10,34 @@
  *   - Alles andere (Icons, Manifest): erst Cache, dann Netz.
  */
 
-var VERSION = 'sudoku-1.6';        // dieselbe Nummer wie APP_VERSION in index.html
+var VERSION = 'sudoku-1.7';        // dieselbe Nummer wie APP_VERSION in index.html
+
+// Icons werden mit "immutable" und einem Jahr Haltbarkeit ausgeliefert. Damit
+// eine neue Zeichnung überhaupt ankommt, tragen ihre Adressen die Fassung:
+// gleiche Datei, neue Adresse, also ein neuer Eintrag im Cache des Browsers.
+// Diese Marke muss zu APP_VERSION passen — tools/collect.mjs prüft das.
+var ICON_V = '?v=1.7';
+
+var ICONS = [
+  'icon-192.png',
+  'icon-512.png',
+  'icon-maskable-512.png',
+  'apple-touch-icon.png',
+  'favicon-32.png',
+  'favicon-16.png',
+  'icon-192-julia.png',
+  'icon-512-julia.png',
+  'icon-maskable-512-julia.png',
+  'apple-touch-icon-julia.png'
+].map(function (name) { return './icons/' + name + ICON_V; });
 
 var ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png',
-  './icons/favicon-32.png',
-  './icons/favicon-16.png',
   './julia.html',
-  './manifest-julia.webmanifest',
-  './icons/icon-192-julia.png',
-  './icons/icon-512-julia.png',
-  './icons/icon-maskable-512-julia.png',
-  './icons/apple-touch-icon-julia.png'
-];
+  './manifest-julia.webmanifest'
+].concat(ICONS);
 
 self.addEventListener('install', function (event) {
   event.waitUntil(

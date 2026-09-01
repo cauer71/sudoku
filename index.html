@@ -13,9 +13,9 @@
      angemeldet. -->
 <meta name="theme-color" content="#dfe4ee">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.7">
+<link rel="icon" href="icons/favicon-32.png?v=1.7" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=1.7" sizes="16x16" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -32,6 +32,11 @@
    ============================================================ */
 
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Für [hidden] setzt der Browser display:none nur in seinem eigenen
+   Stylesheet — jede display-Regel von hier gewinnt dagegen. Ohne diese Zeile
+   bliebe eine ausgeblendete .sheet-group sichtbar, weil sie display:flex hat. */
+[hidden] { display: none !important; }
 
 :root {
   color-scheme: light;
@@ -1058,6 +1063,15 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         Bestzeit für jeden sichtbar, der die Adresse kennt.</p>
       </div>
 
+      <div class="sheet-group" id="installGroup" hidden>
+        <span class="sheet-label">Als App installieren</span>
+        <button class="btn-filled" id="btnInstall" type="button" hidden></button>
+        <p class="sheet-note" id="installIcon"></p>
+        <p class="sheet-note" id="installHow" hidden>Dieser Browser fragt nicht von selbst:
+        am iPhone über das Teilen-Symbol „Zum Home-Bildschirm“, auf Android über
+        das Menü mit den drei Punkten „App installieren“.</p>
+      </div>
+
       <div class="sheet-group sheet-divider">
         <span class="sheet-label" style="padding-top:12px">Tastatur</span>
         <dl class="shortcuts">
@@ -1096,7 +1110,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      dasselbe wie der Cache.
      ========================================================== */
 
-  var APP_VERSION = "1.6";
+  var APP_VERSION = "1.7";
   $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
@@ -1405,6 +1419,38 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     if (settings.julia) document.documentElement.setAttribute("data-mode", "julia");
     else document.documentElement.removeAttribute("data-mode");
     applyThemeColor();
+    applyInstallLinks();
+  }
+
+  /* ----------------------------------------------------------
+     Was beim Installieren als Icon genommen wird, steht nicht im
+     Farbschema, sondern im Kopf der Seite: Android liest das verknüpfte
+     Manifest, iOS das apple-touch-icon. Beides zeigte bisher fest auf die
+     blaue Reihe — wer im Julia-Modus installierte, bekam deshalb das blaue
+     Icon. Hier wandern beide Verknüpfungen mit dem Modus.
+
+     Das Manifest-Element wird ausgetauscht, nicht bloß umgeschrieben: Chrome
+     merkt eine neue Verknüpfung zuverlässiger als ein geändertes Attribut.
+     ---------------------------------------------------------- */
+
+  function applyInstallLinks() {
+    var apple = document.querySelector('link[rel="apple-touch-icon"]');
+    if (apple) {
+      // Die Fassungsmarke kommt aus APP_VERSION, damit sie hier nicht
+      // veralten kann — die Icons liegen ein Jahr im Cache des Geräts.
+      apple.setAttribute("href", "icons/apple-touch-icon"
+        + (settings.julia ? "-julia" : "") + ".png?v=" + APP_VERSION);
+    }
+
+    var link = document.querySelector('link[rel="manifest"]');
+    if (!link) return;                   // Einzeldatei-Betrieb: kein Manifest
+    var want = settings.julia ? "manifest-julia.webmanifest" : "manifest.webmanifest";
+    if (link.getAttribute("href") === want) return;
+
+    var fresh = document.createElement("link");
+    fresh.rel = "manifest";
+    fresh.href = want;
+    link.parentNode.replaceChild(fresh, link);
   }
 
   // Farbe der Systemleisten im installierten Betrieb: immer der aktuelle
@@ -2574,6 +2620,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   bindSwitch("#setSame", "same");
   bindSwitch("#setJulia", "julia", function () {
     applyMode();
+    installState();                      // Hinweis auf die Icon-Farbe mitziehen
     say(settings.julia ? "Julia-Modus an." : "Julia-Modus aus.");
   });
   (function bindName() {
@@ -2586,6 +2633,91 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       say(playerName ? "Rangliste: als „" + playerName + "“ eintragen." : "Rangliste: kein Eintrag.");
     });
   })();
+
+  /* ==========================================================
+     Installieren
+     ==========================================================
+     Der Weg über das Browser-Menü ist schwer zu finden, und vor allem sieht
+     man dort nicht, welches Icon man bekommt. Darum steht das Angebot im Menü
+     der App, mit einem Satz dazu, welche Farbe gerade dran ist.
+     ========================================================== */
+
+  var installGroup = $("#installGroup");
+  var installBtn = $("#btnInstall");
+  var installIcon = $("#installIcon");
+  var installHow = $("#installHow");
+  var installEvent = null;
+
+  function isStandalone() {
+    try {
+      if (window.matchMedia("(display-mode: standalone)").matches) return true;
+      if (window.matchMedia("(display-mode: fullscreen)").matches) return true;
+    } catch (e) { /* alte Browser: unten weiter */ }
+    return navigator.standalone === true;
+  }
+
+  function installState() {
+    if (!installGroup) return;
+    // Kein Manifest verknüpft (Einzeldatei-Betrieb) oder schon installiert:
+    // dann gibt es nichts anzubieten.
+    var possible = !!document.querySelector('link[rel="manifest"]') && !isStandalone();
+    installGroup.hidden = !possible;
+    if (!possible) return;
+
+    if (settings.julia) {
+      // Für rosé führt der Weg über julia.html. Diese Seite verlinkt das
+      // Rosé-Manifest von der ersten Zeile an — daran kann kein Browser
+      // vorbei. Die Verknüpfung hier umzuschalten hilft iOS zuverlässig
+      // (dort wird das apple-touch-icon beim Ablegen aus der Seite gelesen),
+      // ob Android das nachgeschobene Manifest immer aufgreift, ist nicht
+      // sicher. Also nicht darauf verlassen.
+      installBtn.hidden = false;
+      installBtn.textContent = "Rosé-Fassung installieren";
+      installIcon.textContent = "Der Julia-Modus ist an: der Knopf führt zur Rosé-Seite, "
+        + "dort bekommst du das rosa Icon. Blau und rosé dürfen zugleich auf dem "
+        + "Startbildschirm liegen.";
+      installHow.hidden = true;          // die Anleitung steht auf jener Seite
+      return;
+    }
+
+    installBtn.textContent = "Auf dem Startbildschirm ablegen";
+    installIcon.textContent = "Du bekommst das blaue Icon. Für das rosa zuerst den "
+      + "Julia-Modus einschalten.";
+    installBtn.hidden = !installEvent;
+    installHow.hidden = !!installEvent;
+  }
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();                  // eigenen Knopf anbieten statt der Leiste
+    installEvent = e;
+    installState();
+  });
+
+  window.addEventListener("appinstalled", function () {
+    installEvent = null;
+    installIcon.textContent = "Fertig — das Icon liegt auf dem Startbildschirm.";
+    installBtn.hidden = true;
+    installHow.hidden = true;
+  });
+
+  installBtn.addEventListener("click", function () {
+    if (settings.julia) { location.href = "julia.html"; return; }
+    if (!installEvent) { installState(); return; }
+    var e = installEvent;
+    installEvent = null;
+    installBtn.hidden = true;
+    e.prompt();
+    if (e.userChoice && e.userChoice.then) {
+      e.userChoice.then(function (res) {
+        if (!res || res.outcome !== "accepted") {
+          say("Nicht installiert.");
+          installHow.hidden = false;
+        }
+      });
+    }
+  });
+
+  installState();
 
   bindSwitch("#setHaptik", "haptik", function () {
     if (settings.haptik) buzz("value");        // einmal spüren lassen

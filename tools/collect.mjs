@@ -61,6 +61,28 @@ if (appVersion[1] !== swVersion[1]) {
   process.exit(1);
 }
 
+// Icons liefert Cloudflare mit "immutable" und einem Jahr Haltbarkeit aus. Eine
+// neue Zeichnung unter der alten Adresse käme bei niemandem an, der die App
+// schon hat. Deshalb tragen alle Icon-Adressen die Fassung als ?v=… — und
+// deshalb wird hier geprüft, dass keine Stelle vergessen wurde.
+const ICON_REFS = ['index.html', 'julia.html', 'manifest.webmanifest', 'manifest-julia.webmanifest', 'sw.js'];
+const stale = [];
+for (const rel of ICON_REFS) {
+  const text = await readFile(join(ROOT, rel), 'utf8');
+  // Verweise auf eine Icon-Datei, denen die richtige Marke fehlt
+  for (const m of text.matchAll(/icons\/[a-z0-9-]+\.png(\?v=[0-9.]+)?/g)) {
+    if (m[1] !== `?v=${appVersion[1]}`) stale.push(`${rel}: ${m[0]}`);
+  }
+  // sw.js baut die Liste aus einem Präfix zusammen
+  const iconV = text.match(/ICON_V = '\?v=([0-9.]+)'/);
+  if (iconV && iconV[1] !== appVersion[1]) stale.push(`${rel}: ICON_V=?v=${iconV[1]}`);
+}
+if (stale.length) {
+  console.error(`Icon-Adressen ohne die Marke ?v=${appVersion[1]}:\n  ` + stale.join('\n  ') +
+    '\nSonst behalten Geräte die alten Icons bis zu einem Jahr.');
+  process.exit(1);
+}
+
 await rm(DIST, { recursive: true, force: true });
 
 const missing = [];

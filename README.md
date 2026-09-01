@@ -104,10 +104,33 @@ Dazu gehören `manifest.webmanifest`, der Service Worker `sw.js` (macht die App
 offline verfügbar) und die Icons unter `icons/`. Die Farbe der Systemleisten
 folgt zur Laufzeit dem Papiergrund, also hell/dunkel und dem Julia-Modus.
 
-Das Icon zeigt dasselbe Motiv wie das Spiel: ein 3×3-Gitter mit einem
-hervorgehobenen Feld, in `#2b5db0` und `#d9e2ff` aus der M3-Palette. Es liegt in
-192, 512 (`any`), 512 (`maskable`, Inhalt innerhalb der mittleren 80 % für die
-Adaptivformen von Android), 180 für iOS sowie 32 und 16 als Favicon vor.
+### Das Icon
+
+Ein 3×3-Block auf farbigem Grund, drei Ziffern darin, eine Zelle hervorgehoben
+wie die gewählte Zelle im Spiel. **Ziffern in einem Gitter** sind das, woran man
+Sudoku erkennt; ein leeres Gitter sieht wie eine Tabelle aus. Deshalb bleiben
+sie in jeder Größe drin — bei 16 px sind sie nicht mehr zu lesen, aber als
+Ziffernform noch zu sehen, und das ist mehr, als ein leeres Gitter dort hergibt.
+
+5 · 3 · 7 stehen so, dass keine Ziffer zweimal in Zeile, Spalte oder Block
+vorkommt: der Ausschnitt könnte aus einem echten Rätsel stammen. Ihre Lage ist
+bewusst unsymmetrisch, sonst sieht es nach Muster aus statt nach Rätsel.
+
+Der farbige Rand trägt die Unterscheidung der beiden Fassungen. Blau ist
+`--primary` der App. Rosé ist derselbe Farbton wie die tertiary-Rolle, aber
+heller und satter (`#b981b5`): die Rolle selbst (`#725572`) liest sich bei 64 px
+als dunkles Mauve, und dann ist nicht zu sehen, dass es das rosa Icon ist. Die
+Oberfläche im Julia-Modus behält die Werte der Vorlage unverändert; nur der
+Icon-Grund ist aufgehellt, weil er eine andere Aufgabe hat.
+
+Größen: 192, 512 (`any`), 512 (`maskable`, Inhalt innerhalb der mittleren 80 %
+für die Adaptivformen von Android), 180 für iOS, dazu 32 und 16 als Favicon.
+Erzeugt mit `node tools/make-icons.mjs` (braucht Playwright, nur zum Erzeugen).
+
+Die Adressen der Icons tragen die Fassungsnummer als `?v=…`. Cloudflare liefert
+`/icons/*` mit `immutable` und einem Jahr Haltbarkeit aus — eine neue Zeichnung
+unter der alten Adresse käme bei niemandem an, der die App schon hat.
+`npm run collect` bricht ab, wenn eine Icon-Adresse die Marke nicht trägt.
 
 ### Zwei Icons zur Wahl
 
@@ -123,6 +146,23 @@ Beide verweisen auf ihr eigenes Manifest; das rosé hat eine eigene `id`, Androi
 behandelt es also als eigene App. Beide lassen sich nebeneinander installieren.
 Der Parameter `?julia=1` bzw. `?julia=0` setzt den Modus verbindlich, damit die
 rosé Fassung auch nach geleertem Speicher rosé bleibt.
+
+**Im Menü** steht dafür eine Gruppe *Als App installieren*. Sie sagt, welches
+Icon gerade dran ist, und bietet den passenden Weg an:
+
+- Julia-Modus **aus** → das Browser-Angebot auf dieser Seite (blaues Icon);
+  bietet der Browser nichts an, steht die Anleitung für iPhone und Android da.
+- Julia-Modus **an** → der Knopf führt auf `/julia.html`, wo das Rosé-Manifest
+  von der ersten Zeile an im Quelltext steht. Dort gibt es denselben Knopf.
+- Läuft die App schon installiert, verschwindet die Gruppe.
+
+Zusätzlich wandern `<link rel="manifest">` und `<link rel="apple-touch-icon">`
+mit dem Julia-Schalter mit. Das repariert den Weg über das Browser-Menü: vorher
+zeigten beide fest auf die blaue Reihe, wer also im Julia-Modus installierte,
+bekam trotzdem das blaue Icon. Auf iOS greift das sicher — dort wird das
+apple-touch-icon beim Ablegen aus der Seite gelesen. Ob Android ein
+nachgeschobenes Manifest immer aufgreift, ließ sich hier nicht prüfen; darum
+führt der rosé Weg über die eigene Seite und verlässt sich nicht darauf.
 
 > Die Artefakt-Veröffentlichung ist eine einzelne HTML-Seite und kann keine
 > Manifest-, Icon- und Worker-Dateien mitbringen; installierbar ist deshalb nur
@@ -314,12 +354,13 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-1.6`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-1.7`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 
 `npm run collect` bricht ab, wenn die beiden auseinandergehen; die
-`test`-Prüfung vergleicht zusätzlich, was im Menü steht.
+`test`-Prüfung vergleicht zusätzlich, was im Menü steht. Dieselbe Nummer steht
+als `?v=…` an allen Icon-Adressen, siehe [Das Icon](#das-icon).
 
 ## Aufbau
 
