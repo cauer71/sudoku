@@ -138,6 +138,36 @@ Spielfeld · Bedienteil mit den Ziffern 1–9 in einer Reihe und sechs Werkzeuge
 (Notizen, Löschen, Tipp, Zurück, Vor, Bestzeit). Schwierigkeitswahl,
 Einstellungen und Tastaturhilfe liegen im Menü-Blatt, das von unten einfährt.
 
+Die **Grad-Pille** ist ein Knopf und öffnet das Menü. Ein Tipp auf einen
+**anderen** Grad startet dort sofort ein Rätsel dieses Grades; derselbe Grad
+lässt das laufende Spiel in Ruhe, dafür gibt es „Rätsel erzeugen".
+
+**Bestzeit** öffnet ein Fenster mit allen vier Graden. Vorher zeigte der Knopf
+nur den Grad des laufenden Spiels, weshalb bereits erspielte Zeiten unsichtbar
+blieben, sobald man den Grad gewechselt hatte.
+
+## Ziffernleiste
+
+| Bedienung | Wirkung |
+|---|---|
+| kurz tippen, Feld gewählt | Zahl eintragen — **danach wird das Feld abgewählt** |
+| lang drücken (0,45 s) | Notiz setzen, ohne den Modus zu wechseln; das Feld bleibt gewählt |
+| tippen, kein Feld gewählt | alle Vorkommen dieser Ziffer hervorheben (nochmal tippen hebt es auf) |
+
+Die Abwahl nach dem Eintragen ist der Kern: Vorher überschrieb ein Tipp auf eine
+andere Ziffer das gerade gefüllte Feld, obwohl man nur hervorheben wollte.
+
+Auf der **Tastatur** bleibt das Feld nach dem Eintragen gewählt — sonst wäre das
+Weiterwandern mit den Pfeiltasten unterbrochen. Ohne Auswahl hebt eine Ziffer
+dort ebenfalls nur hervor; `Esc` wählt ab.
+
+## Beim Gewinnen
+
+Ein kurzes Feuerwerk auf einer Leinwand über der Seite, dazu die Welle über das
+Gitter. Die Farben kommen aus der laufenden Palette, im Julia-Modus ist es also
+rosé; Rot ist bewusst nicht dabei, weil es im Spiel „Fehler" bedeutet. Bei
+`prefers-reduced-motion` entfällt beides.
+
 ## Spiel
 
 - **Rätselerzeugung im Browser.** Ein zufälliges vollständiges Gitter wird per

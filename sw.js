@@ -10,7 +10,7 @@
  *   - Alles andere (Icons, Manifest): erst Cache, dann Netz.
  */
 
-var VERSION = 'sudoku-v3';
+var VERSION = 'sudoku-v4';
 
 var ASSETS = [
   './',

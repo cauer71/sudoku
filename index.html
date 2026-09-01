@@ -324,6 +324,18 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 }
 .stat.accent { background: var(--secondary-container); color: var(--on-secondary-container); }
 
+/* Die Grad-Pille ist ein Knopf und öffnet das Menü. */
+button.stat {
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: filter .12s ease, border-radius .22s var(--ease);
+}
+button.stat:hover { filter: brightness(.97); }
+button.stat:active { border-radius: var(--r-key-a); }
+button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
 .stat-label {
   font-size: 11px;
   line-height: 14px;
@@ -563,6 +575,9 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 
 .key {
   position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   display: grid;
   place-items: center;
   aspect-ratio: 1 / 1.75;
@@ -582,6 +597,11 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 .key-num { font-size: 18px; line-height: 1; font-weight: 600; }
 .keys.notes-mode .key { background: var(--surface-container-highest); color: var(--on-surface-variant); }
 .keys.notes-mode .key-num { font-size: 15px; }
+
+/* Rückmeldung, wenn lange gedrückt wurde: die Taste zeigt kurz die
+   Notizen-Gestalt, damit man sieht, dass eine kleine Zahl gesetzt wurde. */
+.key.long { background: var(--secondary-container); color: var(--on-secondary-container); }
+.key.long .key-num { font-size: 15px; }
 
 .key-left {
   position: absolute;
@@ -617,6 +637,53 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 .tool:disabled:hover { filter: none; }
 .tool.on { background: var(--primary); color: var(--on-primary); }
 .tool-label { font-size: 10px; line-height: 12px; letter-spacing: .3px; font-weight: 500; }
+
+/* ---------- Bestzeiten-Fenster ---------- */
+
+.dialog {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%) scale(.94);
+  z-index: 22;
+  width: min(320px, calc(100% - 40px));
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px 22px 12px;
+  border-radius: 28px;
+  background: var(--surface-container-low);
+  box-shadow: 0 8px 34px rgba(0, 0, 0, .26);
+  opacity: 0;
+  transition: opacity .2s var(--ease), transform .2s var(--ease);
+}
+.dialog.open { display: flex; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+.dialog-title { margin: 0 0 10px; font-size: 20px; line-height: 26px; font-weight: 600; }
+.times { margin: 0; display: flex; flex-direction: column; }
+.time-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 10px;
+  border-radius: var(--r-pill);
+  font-size: 15px;
+}
+.time-row.is-current { background: var(--secondary-container); color: var(--on-secondary-container); }
+.time-row dt { font-weight: 500; }
+.time-row dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+.time-row.is-empty dd { color: var(--on-surface-variant); font-weight: 400; }
+.dialog-note { margin: 8px 2px 0; font-size: 13px; line-height: 18px; color: var(--on-surface-variant); }
+
+/* ---------- Feuerwerk beim Gewinnen ---------- */
+
+.fx {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  pointer-events: none;
+}
 
 /* ---------- Menü-Blatt ---------- */
 
@@ -862,10 +929,10 @@ svg.icon .fill { fill: currentColor; stroke: none; }
         <span class="stat-label">Fehler</span>
         <span class="stat-value" id="mistakes">0</span>
       </div>
-      <div class="stat accent">
+      <button class="stat accent" id="btnDiff" type="button" aria-label="Schwierigkeitsgrad ändern">
         <span class="stat-label">Grad</span>
         <span class="stat-value" id="diffLabel">Mittel</span>
-      </div>
+      </button>
     </div>
 
     <main class="stage" id="stage">
@@ -884,6 +951,15 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   </div>
 
   <div class="scrim" id="scrim"></div>
+
+  <div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+    <h2 class="dialog-title" id="dialogTitle">Bestzeiten</h2>
+    <dl class="times" id="bestList"></dl>
+    <p class="dialog-note" id="bestNote"></p>
+    <button class="btn-text" id="btnDialogClose" type="button">Schließen</button>
+  </div>
+
+  <canvas class="fx" id="fx" aria-hidden="true"></canvas>
 
   <section class="sheet" id="sheet" aria-label="Menü">
     <div class="grabber" aria-hidden="true"></div>
@@ -1173,7 +1249,9 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   var revealed = new Uint8Array(81);
 
   var history = [], future = [];
-  var selected = 40;
+  var selected = 40;          // -1 = kein Feld gewählt
+  var lastPos = 40;           // letzte Position, für Tastatur und Fokus
+  var highlightDigit = 0;     // Ziffer, die hervorgehoben wird (0 = keine)
   var difficulty = "mittel";
   var nextDifficulty = "mittel";
   var elapsed = 0, mistakes = 0, hints = 0;
@@ -1224,6 +1302,10 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   var btnMenu = $("#btnMenu");
   var sheetEl = $("#sheet");
   var scrimEl = $("#scrim");
+  var dialogEl = $("#dialog");
+  var bestListEl = $("#bestList");
+  var bestNoteEl = $("#bestNote");
+  var fxEl = $("#fx");
 
   btnMenu.innerHTML = svg("tune");
 
@@ -1376,7 +1458,9 @@ svg.icon .fill { fill: currentColor; stroke: none; }
       mistakes = d.mistakes | 0;
       hints = d.hints | 0;
       won = !!d.won;
-      selected = (typeof d.selected === "number" && d.selected >= 0 && d.selected < 81) ? d.selected : 40;
+      selected = (typeof d.selected === "number" && d.selected >= -1 && d.selected < 81) ? d.selected : 40;
+      lastPos = selected >= 0 ? selected : 40;
+      highlightDigit = 0;
       history = []; future = [];
       return true;
     } catch (e) { return false; }
@@ -1401,8 +1485,13 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 
   function render() {
     var conf = conflictSet();
-    var selR = (selected / 9) | 0, selC = selected % 9, selB = BOX[selected];
-    var selVal = board[selected];
+    var hasSel = selected >= 0;
+    var selR = hasSel ? (selected / 9) | 0 : -1;
+    var selC = hasSel ? selected % 9 : -1;
+    var selB = hasSel ? BOX[selected] : -1;
+    // Hervorgehoben wird die ausdrücklich gewählte Ziffer, sonst die im
+    // gewählten Feld stehende.
+    var mark = highlightDigit || (hasSel ? board[selected] : 0);
     var hidden = paused || busy;
 
     for (var i = 0; i < 81; i++) {
@@ -1429,9 +1518,9 @@ svg.icon .fill { fill: currentColor; stroke: none; }
       // sonst bricht es ab, sobald sich sonst etwas ändert.
       if (isWrong && i === blinkIndex) cl += " blink";
 
-      if (i === selected) cl += " sel";
-      else if (settings.same && selVal && v === selVal) cl += " same";
-      else if (((i / 9) | 0) === selR || i % 9 === selC || BOX[i] === selB) cl += " peer";
+      if (hasSel && i === selected) cl += " sel";
+      else if (settings.same && mark && v === mark) cl += " same";
+      else if (hasSel && (((i / 9) | 0) === selR || i % 9 === selC || BOX[i] === selB)) cl += " peer";
 
       if (el.className !== cl) el.className = cl;
 
@@ -1447,8 +1536,10 @@ svg.icon .fill { fill: currentColor; stroke: none; }
         if (on !== ne.classList.contains("on")) ne.classList.toggle("on", on);
       }
 
-      el.tabIndex = (i === selected) ? 0 : -1;
-      el.setAttribute("aria-selected", i === selected ? "true" : "false");
+      // Ohne Auswahl bleibt die letzte Position tabbar, damit das Gitter
+      // per Tastatur erreichbar bleibt.
+      el.tabIndex = (i === (hasSel ? selected : lastPos)) ? 0 : -1;
+      el.setAttribute("aria-selected", (hasSel && i === selected) ? "true" : "false");
       if (isWrong) el.setAttribute("aria-invalid", "true");
       else el.removeAttribute("aria-invalid");
       el.setAttribute("aria-label",
@@ -1483,6 +1574,23 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     btnPause.disabled = won;
 
     boardEl.classList.toggle("solved", won);
+  }
+
+  function selectCell(i) {
+    selected = i;
+    if (i >= 0) lastPos = i;
+    highlightDigit = 0;                  // Anwählen hebt die Hervorhebung auf
+    render();
+    if (i >= 0) cells[i].focus({ preventScroll: true });
+  }
+
+  // Nach dem Eintragen einer Zahl: Feld abwählen und stattdessen diese Ziffer
+  // hervorheben. Ein weiterer Tipp auf die Ziffernleiste hebt dann nur noch
+  // hervor und überschreibt nicht mehr versehentlich das Feld.
+  function deselect(markDigit) {
+    selected = -1;
+    highlightDigit = markDigit || 0;
+    render();
   }
 
   // Eine Sekunde rot aufblitzen lassen. Danach bleibt der rote Rahmen, bis
@@ -1601,7 +1709,7 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   function hint() {
     if (won || paused || busy) return;
     var target = -1;
-    if (!given[selected] && board[selected] !== solution[selected]) {
+    if (selected >= 0 && !given[selected] && board[selected] !== solution[selected]) {
       target = selected;
     } else {
       var open = [];
@@ -1624,6 +1732,8 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     PEERS[target].forEach(function (j) { if (!board[j]) notes[j] &= ~(1 << v); });
     hints++;
     selected = target;
+    lastPos = target;
+    highlightDigit = 0;
 
     commit(before);
     say("Tipp eingesetzt: " + v + " in Zeile " + (((target / 9) | 0) + 1) + ", Spalte " + ((target % 9) + 1) + ".");
@@ -1685,15 +1795,106 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     render(); save();
   }
 
+  /* ==========================================================
+     Feuerwerk beim Gewinnen
+     ========================================================== */
+
+  var fxRunning = false;
+  function fireworks(duration) {
+    if (fxRunning) return;
+    var ctx = fxEl.getContext && fxEl.getContext("2d");
+    if (!ctx) return;
+    fxRunning = true;
+
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    fxEl.width = Math.floor(window.innerWidth * dpr);
+    fxEl.height = Math.floor(window.innerHeight * dpr);
+    fxEl.style.display = "block";
+
+    // Farben aus der laufenden Palette — im Julia-Modus wird das Feuerwerk
+    // damit von selbst rosé.
+    var cs = getComputedStyle(document.documentElement);
+    // Bewusst ohne --error: Rot bedeutet in diesem Spiel „Fehler" und hat beim
+    // Gewinnen nichts zu sagen. Das Gold kommt dazu, damit es festlich wirkt
+    // und nicht nur nach Markenfarben.
+    var colors = ["--primary", "--secondary", "--success", "--on-primary-container"]
+      .map(function (n) { return cs.getPropertyValue(n).trim(); })
+      .filter(Boolean);
+    colors.push("#e8b23a");
+    if (colors.length < 2) colors = ["#2b5db0", "#e8b23a"];
+
+    var parts = [], bursts = 0, nextAt = 0, t0 = performance.now();
+
+    function burst() {
+      var x = (0.18 + Math.random() * 0.64) * fxEl.width;
+      var y = (0.16 + Math.random() * 0.34) * fxEl.height;
+      var col = colors[Math.floor(Math.random() * colors.length)];
+      var n = 40;
+      for (var i = 0; i < n; i++) {
+        var a = (i / n) * Math.PI * 2 + Math.random() * 0.26;
+        var sp = (2.1 + Math.random() * 3.2) * dpr;
+        // Mit Abstand vom Mittelpunkt starten, sonst liegen im ersten Bild
+        // alle Teilchen übereinander und es sieht wie ein Klecks aus.
+        var off = (3 + Math.random() * 7) * dpr;
+        var px = x + Math.cos(a) * off, py = y + Math.sin(a) * off;
+        parts.push({
+          x: px, y: py, px: px, py: py,
+          vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+          life: 1, col: col, r: (1.1 + Math.random() * 1.5) * dpr
+        });
+      }
+    }
+
+    function frame(now) {
+      var el = now - t0;
+      if (el >= nextAt && bursts < 5) {
+        burst(); bursts++;
+        nextAt = el + 240 + Math.random() * 240;
+      }
+      ctx.clearRect(0, 0, fxEl.width, fxEl.height);
+      ctx.lineCap = "round";
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var q = parts[i];
+        q.px = q.x; q.py = q.y;
+        q.vy += 0.034 * dpr;              // Schwerkraft
+        q.vx *= 0.985; q.vy *= 0.985;     // Luftwiderstand
+        q.x += q.vx; q.y += q.vy;
+        q.life -= 0.0115;
+        if (q.life <= 0) { parts.splice(i, 1); continue; }
+        ctx.globalAlpha = q.life > 1 ? 1 : q.life;
+        ctx.strokeStyle = q.col;
+        ctx.lineWidth = q.r * 2;
+        // Strich von der vorigen zur jetzigen Lage: das ergibt den Schweif,
+        // der aus Punkten erst ein Feuerwerk macht.
+        ctx.beginPath();
+        ctx.moveTo(q.px, q.py);
+        ctx.lineTo(q.x, q.y);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      if (el < duration || parts.length) {
+        requestAnimationFrame(frame);
+      } else {
+        ctx.clearRect(0, 0, fxEl.width, fxEl.height);
+        fxEl.style.display = "none";
+        fxRunning = false;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
   function win() {
     won = true;
     paused = false;
+    selected = -1;
+    highlightDigit = 0;
     var key = difficulty;
     var previous = best[key];
     var isBest = (typeof previous !== "number") || elapsed < previous;
     if (isBest) { best[key] = elapsed; saveMeta(); }
 
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      fireworks(2400);
       for (var i = 0; i < 81; i++) {
         var r = (i / 9) | 0, c = i % 9;
         cells[i].style.animationDelay = ((r + c) * 34) + "ms";
@@ -1746,6 +1947,8 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     won = false; paused = false;
     selected = 40;
     for (var j = 0; j < 81; j++) { if (!given[j]) { selected = j; break; } }
+    lastPos = selected;
+    highlightDigit = 0;
   }
 
   function newGame(diff) {
@@ -1769,7 +1972,7 @@ svg.icon .fill { fill: currentColor; stroke: none; }
       for (var i = 0; i < 81; i++) if (given[i]) clues++;
       say(DIFFS[diff].label + " — " + clues + " vorgegebene Zahlen.");
       render(); save(); scheduleFit();
-      cells[selected].focus({ preventScroll: true });
+      if (selected >= 0) cells[selected].focus({ preventScroll: true });
     }, 40);
   }
 
@@ -1821,10 +2024,16 @@ svg.icon .fill { fill: currentColor; stroke: none; }
      ========================================================== */
 
   function sheetOpen() { return sheetEl.classList.contains("open"); }
+  function dialogOpen() { return dialogEl.classList.contains("open"); }
+  function overlayOpen() { return sheetOpen() || dialogOpen(); }
+
+  // Blatt und Bestzeiten-Fenster nutzen dieselbe Abdunklung.
+  function syncScrim() { scrimEl.classList.toggle("on", overlayOpen()); }
 
   function setSheet(open) {
     sheetEl.classList.toggle("open", open);
-    scrimEl.classList.toggle("on", open);
+    if (open) dialogEl.classList.remove("open");
+    syncScrim();
     btnMenu.setAttribute("aria-expanded", open ? "true" : "false");
     btnMenu.setAttribute("aria-label", open ? "Menü schließen" : "Menü öffnen");
     if (open) {
@@ -1835,8 +2044,48 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     }
   }
 
+  function setDialog(open) {
+    dialogEl.classList.toggle("open", open);
+    if (open) setSheetSilently(false);
+    syncScrim();
+    if (open) $("#btnDialogClose").focus({ preventScroll: true });
+    else toolBtn.best.focus({ preventScroll: true });
+  }
+
+  function setSheetSilently(open) {
+    sheetEl.classList.toggle("open", open);
+    btnMenu.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function closeOverlays() {
+    if (dialogOpen()) { setDialog(false); return; }
+    if (sheetOpen()) setSheet(false);
+  }
+
+  // Bestzeiten aller vier Grade — der Knopf zeigte vorher nur den Grad des
+  // laufenden Spiels, weshalb vorhandene Zeiten unsichtbar blieben.
+  function showBestTimes() {
+    var any = false;
+    bestListEl.innerHTML = Object.keys(DIFFS).map(function (k) {
+      var b = best[k];
+      var has = typeof b === "number";
+      if (has) any = true;
+      return '<div class="time-row' + (k === difficulty ? " is-current" : "") +
+             (has ? "" : " is-empty") + '">' +
+             "<dt>" + DIFFS[k].label + "</dt>" +
+             "<dd>" + (has ? fmtTime(b) : "—") + "</dd></div>";
+    }).join("");
+    bestNoteEl.textContent = any
+      ? "Hervorgehoben ist der Grad des laufenden Spiels."
+      : "Noch keine Bestzeit — sie entsteht, sobald ein Rätsel gelöst ist.";
+    setDialog(true);
+  }
+
   btnMenu.addEventListener("click", function () { setSheet(!sheetOpen()); });
-  scrimEl.addEventListener("click", function () { setSheet(false); });
+  scrimEl.addEventListener("click", closeOverlays);
+  $("#btnDialogClose").addEventListener("click", function () { setDialog(false); });
+  // Der Grad oben öffnet das Menü, wo die vier Grade stehen.
+  $("#btnDiff").addEventListener("click", function () { setSheet(true); });
 
   /* ==========================================================
      Eingabe
@@ -1845,27 +2094,96 @@ svg.icon .fill { fill: currentColor; stroke: none; }
   boardEl.addEventListener("click", function (e) {
     var el = e.target.closest(".cell");
     if (!el || paused || busy) return;
-    selected = Number(el.dataset.i);
-    render();
-    el.focus({ preventScroll: true });
+    selectCell(Number(el.dataset.i));
   });
 
+  /* ----------------------------------------------------------
+     Ziffernleiste
+       kurz tippen  → Zahl eintragen, danach Feld abwählen
+       lang drücken → Notiz (wie Umschalt auf der Tastatur)
+       ohne gewähltes Feld → nur hervorheben
+     ---------------------------------------------------------- */
+
+  var LONGPRESS = 450;
+  var padTimer = null, padKey = null, padDone = false, padSuppressClick = false;
+
+  function padAction(n, asNote) {
+    if (paused || busy || won) return;
+
+    // Kein Feld gewählt: die Leiste hebt nur hervor. Nochmal dieselbe Ziffer
+    // schaltet die Hervorhebung wieder aus.
+    if (selected < 0) {
+      highlightDigit = (highlightDigit === n) ? 0 : n;
+      render();
+      return;
+    }
+
+    var i = selected;
+    if (given[i]) { say("Vorgegebene Zahlen lassen sich nicht ändern."); return; }
+
+    if (asNote) {
+      // Beim Notieren bleibt das Feld gewählt — meist trägt man mehrere ein.
+      toggleNote(i, n);
+      cells[i].focus({ preventScroll: true });
+      return;
+    }
+
+    placeValue(i, n);
+    if (board[i]) deselect(board[i]);   // gesetzt: abwählen und hervorheben
+  }
+
+  function padStart(el) {
+    padKey = el;
+    padDone = false;
+    if (padTimer) clearTimeout(padTimer);
+    padTimer = setTimeout(function () {
+      padTimer = null;
+      padDone = true;
+      el.classList.add("long");
+      setTimeout(function () { el.classList.remove("long"); }, 320);
+      padAction(Number(el.dataset.n), !notesMode);
+    }, LONGPRESS);
+  }
+
+  function padEnd(commit) {
+    if (padTimer) { clearTimeout(padTimer); padTimer = null; }
+    var el = padKey;
+    padKey = null;
+    if (!el) return;
+    padSuppressClick = true;             // der folgende click ist erledigt
+    if (padDone) { padDone = false; return; }
+    if (commit) padAction(Number(el.dataset.n), notesMode);
+  }
+
+  keysEl.addEventListener("pointerdown", function (e) {
+    var el = e.target.closest(".key");
+    if (el) padStart(el);
+  });
+  keysEl.addEventListener("pointerup", function (e) {
+    if (e.target.closest(".key")) padEnd(true);
+  });
+  keysEl.addEventListener("pointercancel", function () { padEnd(false); });
+  keysEl.addEventListener("pointerleave", function () { padEnd(false); });
+  // Langes Drücken soll kein Kontextmenü und keine Textauswahl auslösen.
+  keysEl.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  // Nur für Tastaturbedienung der Knöpfe (Eingabe-/Leertaste erzeugen einen
+  // click ohne Zeigerereignisse).
   keysEl.addEventListener("click", function (e) {
     var el = e.target.closest(".key");
-    if (!el || paused || busy || won) return;
-    var n = Number(el.dataset.n);
-    if (notesMode) toggleNote(selected, n);
-    else placeValue(selected, n);
-    cells[selected].focus({ preventScroll: true });
+    if (!el) return;
+    if (padSuppressClick) { padSuppressClick = false; return; }
+    padAction(Number(el.dataset.n), notesMode);
   });
 
   function move(dr, dc) {
+    // Ohne Auswahl wählt der erste Pfeiltastendruck die letzte Position
+    // wieder an, danach wird bewegt.
+    if (selected < 0) { selectCell(lastPos); return; }
     var r = (selected / 9) | 0, c = selected % 9;
     r = Math.min(8, Math.max(0, r + dr));
     c = Math.min(8, Math.max(0, c + dc));
-    selected = r * 9 + c;
-    render();
-    cells[selected].focus({ preventScroll: true });
+    selectCell(r * 9 + c);
   }
 
   function setNotesMode(state) {
@@ -1882,8 +2200,8 @@ svg.icon .fill { fill: currentColor; stroke: none; }
     // dessen Checkbox, und Escape müsste das Blatt sonst nicht mehr schliessen.
     // Alle anderen Tasten gehen im offenen Blatt an die Oberfläche (die
     // Leertaste schaltet damit weiterhin den fokussierten Schalter).
-    if (sheetOpen()) {
-      if (k === "Escape") { e.preventDefault(); setSheet(false); }
+    if (overlayOpen()) {
+      if (k === "Escape") { e.preventDefault(); closeOverlays(); }
       return;
     }
 
@@ -1914,21 +2232,26 @@ svg.icon .fill { fill: currentColor; stroke: none; }
       case "ArrowLeft":  e.preventDefault(); move(0, -1); return;
       case "ArrowRight": e.preventDefault(); move(0, 1);  return;
       case "Backspace":
-      case "Delete":     e.preventDefault(); clearCell(selected); return;
+      case "Delete":     e.preventDefault(); if (selected >= 0) clearCell(selected); return;
       case "n":
       case "N":          e.preventDefault(); setNotesMode(!notesMode); return;
       case "h":
       case "H":          e.preventDefault(); hint(); return;
     }
 
+    if (k === "Escape") { e.preventDefault(); if (selected >= 0 || highlightDigit) deselect(0); return; }
+
     if (k >= "1" && k <= "9") {
       e.preventDefault();
       var n = Number(k);
+      // Auf der Tastatur bleibt das Feld nach dem Eintragen gewählt — sonst
+      // wäre das Weiterwandern mit den Pfeiltasten unterbrochen.
+      if (selected < 0) { highlightDigit = (highlightDigit === n) ? 0 : n; render(); return; }
       if (e.shiftKey !== notesMode) toggleNote(selected, n);
       else placeValue(selected, n);
       return;
     }
-    if (k === "0") { e.preventDefault(); clearCell(selected); }
+    if (k === "0") { e.preventDefault(); if (selected >= 0) clearCell(selected); }
   });
 
   document.addEventListener("visibilitychange", function () {
@@ -1940,16 +2263,14 @@ svg.icon .fill { fill: currentColor; stroke: none; }
      ========================================================== */
 
   toolBtn.notes.addEventListener("click", function () { setNotesMode(!notesMode); });
-  toolBtn.erase.addEventListener("click", function () { clearCell(selected); });
+  toolBtn.erase.addEventListener("click", function () {
+    if (selected < 0) { say("Zuerst ein Feld antippen."); return; }
+    clearCell(selected);
+  });
   toolBtn.hint.addEventListener("click", hint);
   toolBtn.undo.addEventListener("click", undo);
   toolBtn.redo.addEventListener("click", redo);
-  toolBtn.best.addEventListener("click", function () {
-    var b = best[difficulty];
-    say(typeof b === "number"
-      ? "Bestzeit " + DIFFS[difficulty].label + ": " + fmtTime(b) + "."
-      : "Noch keine Bestzeit für " + DIFFS[difficulty].label + ".");
-  });
+  toolBtn.best.addEventListener("click", showBestTimes);
 
   btnPause.addEventListener("click", function () { setPaused(!paused); });
   $("#btnNew").addEventListener("click", function () { setSheet(false); newGame(nextDifficulty); });
@@ -1957,12 +2278,17 @@ svg.icon .fill { fill: currentColor; stroke: none; }
 
   segs.forEach(function (s) {
     s.addEventListener("click", function () {
-      nextDifficulty = s.dataset.diff;
+      var d = s.dataset.diff;
+      nextDifficulty = d;
       segs.forEach(function (o) {
         o.setAttribute("aria-checked", o === s ? "true" : "false");
       });
       saveMeta();
-      say("Nächstes Rätsel: " + DIFFS[nextDifficulty].label + ".");
+      setSheet(false);
+      // Ein anderer Grad startet sofort — kein zweiter Griff nötig. Derselbe
+      // Grad lässt das laufende Spiel in Ruhe; dafür gibt es „Rätsel erzeugen“.
+      if (d !== difficulty) newGame(d);
+      else say(DIFFS[d].label + " läuft schon. „Rätsel erzeugen“ gibt ein neues.");
     });
   });
 
