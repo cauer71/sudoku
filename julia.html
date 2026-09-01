@@ -13,8 +13,8 @@
      ./?julia=1, die App startet daher im Julia-Modus. -->
 <meta name="theme-color" content="#eedcea">
 <link rel="manifest" href="manifest-julia.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon-julia.png?v=1.7">
-<link rel="icon" href="icons/favicon-32.png?v=1.7" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-julia.png?v=1.8">
+<link rel="icon" href="icons/favicon-32.png?v=1.8" sizes="32x32" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,14 +24,16 @@
   color-scheme: light;
   --paper: #eedcea; --grid-line: rgba(70, 40, 70, .06);
   --surface: #f7ebf3; --on-surface: #1e1a1e; --on-surface-variant: #4c444c;
-  --primary: #725572; --on-primary: #ffffff; --primary-container: #fdd7fa;
+  --primary: #725572; --on-primary: #ffffff;
+  --primary-container: #fdd7fa; --on-primary-container: #2a132c;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --paper: #150f14; --grid-line: rgba(240, 200, 235, .05);
     --surface: #231d22; --on-surface: #eadfe7; --on-surface-variant: #cfc3ce;
-    --primary: #e0bbdd; --on-primary: #412742; --primary-container: #593d5a;
+    --primary: #e0bbdd; --on-primary: #412742;
+    --primary-container: #593d5a; --on-primary-container: #fdd7fa;
   }
 }
 * { box-sizing: border-box; }
@@ -54,22 +56,30 @@ main { max-width: 38ch; text-align: center; padding: 28px 24px 22px; border-radi
 img { width: 84px; height: 84px; border-radius: 19px; margin-bottom: 16px; }
 h1 { margin: 0 0 8px; font-size: 22px; line-height: 28px; font-weight: 600; }
 p { margin: 0 0 14px; font-size: 14px; line-height: 20px; color: var(--on-surface-variant); }
-ol { margin: 0 0 20px; padding-left: 1.3em; text-align: left; font-size: 14px; line-height: 21px; color: var(--on-surface-variant); }
-a.play {
-  display: inline-block; height: 40px; line-height: 40px; padding: 0 24px;
-  border-radius: 20px; background: var(--primary); color: var(--on-primary);
-  font-size: 14px; font-weight: 500; text-decoration: none;
+ol { margin: 16px 0 20px; padding-left: 1.3em; text-align: left; font-size: 14px; line-height: 21px; color: var(--on-surface-variant); }
+/* Gilt für den Knopf und den Verweis gleichermaßen — vorher stand hier
+   „a.play", weshalb der Installieren-Knopf ungestaltet blieb. */
+.play {
+  display: block; width: 100%; height: 44px; line-height: 44px; padding: 0 24px;
+  border: 0; border-radius: 22px; background: var(--primary); color: var(--on-primary);
+  font-family: inherit; font-size: 15px; font-weight: 500; text-align: center;
+  text-decoration: none; cursor: pointer;
 }
-a.play:hover { filter: brightness(1.08); }
-a.play:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-a.other { display: inline-block; margin-top: 14px; font-size: 13px; color: var(--primary); }
-button.play { border: 0; font-family: inherit; cursor: pointer; }
+.play + .play { margin-top: 10px; }
+.play:hover { filter: brightness(1.08); }
+.play:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+/* Zweite Wahl: dieselbe Form, nur getönt statt gefüllt. Installieren ist der
+   Zweck dieser Seite, Spielen kann man auch ohne sie. */
+.play.tonal { background: var(--primary-container); color: var(--on-primary-container, var(--on-surface)); }
+
+a.other { display: inline-block; margin-top: 16px; font-size: 13px; color: var(--primary); }
 [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <main>
-  <img src="icons/icon-512-julia.png?v=1.7" alt="Rosé Icon von Sudoku">
+  <img src="icons/icon-512-julia.png?v=1.8" alt="Rosé Icon von Sudoku">
   <h1>Sudoku Rosé</h1>
   <p>Diese Seite installiert das Spiel mit dem <strong>rosé Icon</strong>. Es startet dann von selbst im Julia-Modus.</p>
   <button class="play" id="install" type="button" hidden>Jetzt installieren</button>
@@ -77,8 +87,8 @@ button.play { border: 0; font-family: inherit; cursor: pointer; }
     <li><strong>iPhone:</strong> Teilen-Symbol → <em>Zum Home-Bildschirm</em></li>
     <li><strong>Android:</strong> Menü ⋮ → <em>App installieren</em></li>
   </ol>
-  <a class="play" href="./?julia=1">Jetzt spielen</a>
-  <br><a class="other" href="./">Lieber die blaue Fassung installieren</a>
+  <a class="play tonal" href="./?julia=1">Jetzt spielen</a>
+  <a class="other" href="./">Lieber die blaue Fassung installieren</a>
 </main>
 
 <script>

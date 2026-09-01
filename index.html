@@ -13,9 +13,9 @@
      angemeldet. -->
 <meta name="theme-color" content="#dfe4ee">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.7">
-<link rel="icon" href="icons/favicon-32.png?v=1.7" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png?v=1.7" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.8">
+<link rel="icon" href="icons/favicon-32.png?v=1.8" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=1.8" sizes="16x16" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -606,6 +606,12 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 .key:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .key.done { opacity: .4; }
 
+/* Die Ziffer, deren Vorkommen gerade hervorgehoben sind. Ein Ring statt einer
+   Füllung, damit sie sich von „aufgebraucht" (blass) und vom Langdrücken
+   (gefüllt) unterscheidet. Die Farbe ist die der hervorgehobenen Zellen, damit
+   der Zusammenhang zu sehen ist. */
+.key.marked { box-shadow: inset 0 0 0 2px var(--secondary); }
+
 .key-num { font-size: 18px; line-height: 1; font-weight: 600; }
 .keys.notes-mode .key { background: var(--surface-container-highest); color: var(--on-surface-variant); }
 .keys.notes-mode .key-num { font-size: 15px; }
@@ -1110,7 +1116,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      dasselbe wie der Cache.
      ========================================================== */
 
-  var APP_VERSION = "1.7";
+  var APP_VERSION = "1.8";
   $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
@@ -1675,8 +1681,10 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     var selC = hasSel ? selected % 9 : -1;
     var selB = hasSel ? BOX[selected] : -1;
     // Hervorgehoben wird die ausdrücklich gewählte Ziffer, sonst die im
-    // gewählten Feld stehende.
-    var mark = highlightDigit || (hasSel ? board[selected] : 0);
+    // gewählten Feld stehende. Die Einstellung „Gleiche Zahlen hervorheben"
+    // regelt nur den zweiten, automatischen Fall — wer eine Ziffer ausdrücklich
+    // antippt, will sie sehen, egal wie der Schalter steht.
+    var mark = highlightDigit || (settings.same && hasSel ? board[selected] : 0);
     var hidden = paused || busy;
 
     for (var i = 0; i < 81; i++) {
@@ -1704,7 +1712,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       if (isWrong && i === blinkIndex) cl += " blink";
 
       if (hasSel && i === selected) cl += " sel";
-      else if (settings.same && mark && v === mark) cl += " same";
+      else if (mark && v === mark) cl += " same";
       else if (hasSel && (((i / 9) | 0) === selR || i % 9 === selC || BOX[i] === selB)) cl += " peer";
 
       if (el.className !== cl) el.className = cl;
@@ -1739,6 +1747,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       var left = 9 - used[keys[k2].n];
       keys[k2].left.textContent = left > 0 ? String(left) : "";
       keys[k2].el.classList.toggle("done", left <= 0);
+      keys[k2].el.classList.toggle("marked", mark > 0 && keys[k2].n === mark);
     }
     keysEl.classList.toggle("notes-mode", notesMode);
 
@@ -1772,10 +1781,33 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   // Nach dem Eintragen einer Zahl: Feld abwählen und stattdessen diese Ziffer
   // hervorheben. Ein weiterer Tipp auf die Ziffernleiste hebt dann nur noch
   // hervor und überschreibt nicht mehr versehentlich das Feld.
-  function deselect(markDigit) {
+  function deselect(digit) {
     selected = -1;
-    highlightDigit = markDigit || 0;
+    highlightDigit = digit || 0;
     render();
+  }
+
+  /* Alle Vorkommen einer Ziffer hervorheben. Nochmal dieselbe schaltet es aus.
+     Das gewählte Feld bleibt gewählt — die Hervorhebung legt sich darüber. */
+  function markDigit(n) {
+    highlightDigit = (highlightDigit === n) ? 0 : n;
+    render();
+    say(highlightDigit ? ("Alle " + n + " hervorgehoben.") : "Hervorhebung aus.");
+  }
+
+  /* Ein Feld ist „fertig", wenn seine Zahl nicht mehr zur Debatte steht: eine
+     Vorgabe, ein aufgedeckter Tipp oder eine Zahl, welche die Fehlerprüfung als
+     richtig kennt. Dort trägt eine Ziffer nichts ein, sondern hebt hervor — das
+     bewahrt richtige Zahlen zugleich vor dem versehentlichen Überschreiben.
+
+     Ist die Fehlerprüfung abgeschaltet, bleibt eine eigene Zahl änderbar. Sonst
+     verriete schon die Reaktion der Leiste, ob sie richtig ist, und genau das
+     soll die abgeschaltete Prüfung ja verbergen. */
+  function isSettled(i) {
+    if (given[i]) return true;
+    if (!board[i]) return false;
+    if (revealed[i]) return true;
+    return !!settings.check && !wrong[i];
   }
 
   // Eine Sekunde rot aufblitzen lassen. Danach bleibt der rote Rahmen, bis
@@ -2386,16 +2418,23 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   function padAction(n, asNote) {
     if (paused || busy || won) return;
 
-    // Kein Feld gewählt: die Leiste hebt nur hervor. Nochmal dieselbe Ziffer
-    // schaltet die Hervorhebung wieder aus.
+    // Kein Feld gewählt: die Leiste hebt nur hervor.
     if (selected < 0) {
-      highlightDigit = (highlightDigit === n) ? 0 : n;
-      render();
+      buzz("note");
+      markDigit(n);
       return;
     }
 
     var i = selected;
-    if (given[i]) { say("Vorgegebene Zahlen lassen sich nicht ändern."); return; }
+
+    // Steht im gewählten Feld schon eine Zahl, die nicht mehr zur Debatte
+    // steht — eine Vorgabe, ein Tipp oder eine als richtig erkannte Zahl —,
+    // dann hebt die Leiste ebenfalls nur hervor.
+    if (isSettled(i)) {
+      buzz("note");
+      markDigit(n);
+      return;
+    }
 
     if (asNote) {
       // Beim Notieren bleibt das Feld gewählt — meist trägt man mehrere ein.
@@ -2408,7 +2447,10 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     buzz("value");
     placeValue(i, n);
     if (board[i] && !wrong[i]) {
-      deselect(board[i]);              // richtig: abwählen und hervorheben
+      // Richtig: abwählen. Die Ziffer wird dabei hervorgehoben, sofern die
+      // Einstellung das automatische Hervorheben überhaupt erlaubt — eine
+      // ausdrücklich angetippte Ziffer zeigt die Leiste dagegen immer.
+      deselect(settings.same ? board[i] : 0);
     } else {
       // Falsch gesetzt — oder wieder gelöscht: das Feld bleibt gewählt, damit
       // die Zahl sich gleich berichtigen lässt, ohne das rote Feld erst
@@ -2531,8 +2573,9 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       var n = Number(k);
       // Auf der Tastatur bleibt das Feld nach dem Eintragen gewählt — sonst
       // wäre das Weiterwandern mit den Pfeiltasten unterbrochen.
-      if (selected < 0) { highlightDigit = (highlightDigit === n) ? 0 : n; render(); return; }
+      if (selected < 0) { markDigit(n); return; }
       if (e.shiftKey !== notesMode) toggleNote(selected, n);
+      else if (isSettled(selected)) markDigit(n);   // wie in der Ziffernleiste
       else placeValue(selected, n);
       return;
     }

@@ -236,24 +236,42 @@ Fassung auf einem Gerät gerade läuft.
 
 | Bedienung | Wirkung |
 |---|---|
-| kurz tippen, Feld gewählt, Zahl **richtig** | Zahl eintragen — **danach wird das Feld abgewählt** und die Ziffer hervorgehoben |
-| kurz tippen, Feld gewählt, Zahl **falsch** | Zahl eintragen — **das Feld bleibt gewählt** |
+| kurz tippen, gewähltes Feld **leer** | Zahl eintragen; richtig → Feld abwählen und die Ziffer hervorheben, falsch → Feld bleibt gewählt |
+| kurz tippen, gewähltes Feld **fertig** | nichts eintragen, sondern **alle Vorkommen dieser Ziffer hervorheben** |
+| kurz tippen, gewähltes Feld **falsch** | Zahl ersetzen; dieselbe Ziffer nochmal löscht sie |
 | lang drücken (0,45 s) | Notiz setzen, ohne den Modus zu wechseln; das Feld bleibt gewählt |
-| tippen, kein Feld gewählt | alle Vorkommen dieser Ziffer hervorheben (nochmal tippen hebt es auf) |
+| tippen, kein Feld gewählt | alle Vorkommen dieser Ziffer hervorheben |
 
-Die Abwahl nach dem Eintragen ist der Kern: Vorher überschrieb ein Tipp auf eine
-andere Ziffer das gerade gefüllte Feld, obwohl man nur hervorheben wollte.
+Nochmal dieselbe Ziffer schaltet eine Hervorhebung wieder aus. Die Taste der
+hervorgehobenen Ziffer trägt einen Ring, damit zu sehen ist, welche gerade aktiv
+ist.
 
-Nach einer **falschen** Zahl wäre dieselbe Abwahl aber im Weg — man müsste das
-rote Feld erst wieder antippen, um zu berichtigen. Es bleibt daher gewählt: ein
-Tipp auf eine andere Ziffer ersetzt die falsche Zahl, ein Tipp auf dieselbe
-löscht sie. Die Zelle zeigt dann beide Rahmen, außen den roten Fehlerrahmen,
-innen den Auswahlrahmen. Ist die Fehlerprüfung abgeschaltet, gibt es kein
-„falsch" — dann wird wie bisher immer abgewählt.
+**Fertig** heißt: die Zahl steht nicht mehr zur Debatte — eine Vorgabe, ein
+aufgedeckter Tipp oder eine Zahl, welche die Fehlerprüfung als richtig kennt.
+Dort trägt die Leiste nichts ein. Das war zweimal gewünscht: erst als Schutz vor
+dem versehentlichen Überschreiben, dann als Wunsch, auf einem solchen Feld die
+Vorkommen einer Ziffer sehen zu können. Ändern lässt sich eine fertige Zahl
+weiterhin — nur nicht mit einem einzigen Tipp: erst *Löschen*, dann neu.
+
+Ist die **Fehlerprüfung abgeschaltet**, bleibt eine eigene Zahl änderbar. Sonst
+verriete schon die Reaktion der Leiste, ob sie richtig ist, und genau das soll
+die abgeschaltete Prüfung ja verbergen. Vorgaben und Tipps heben trotzdem hervor,
+denn dort ist nichts zu verraten.
+
+Die Abwahl nach einer richtigen Eingabe ist älter: vorher überschrieb ein Tipp
+auf eine andere Ziffer das gerade gefüllte Feld, obwohl man nur hervorheben
+wollte. Nach einer **falschen** Zahl wäre dieselbe Abwahl aber im Weg — man
+müsste das rote Feld erst wieder antippen, um zu berichtigen. Es bleibt daher
+gewählt, und die Zelle zeigt beide Rahmen: außen den roten Fehlerrahmen, innen
+den Auswahlrahmen.
+
+Der Schalter **Gleiche Zahlen hervorheben** regelt nur das automatische
+Hervorheben, das vom gewählten Feld ausgeht. Eine ausdrücklich angetippte Ziffer
+wird immer gezeigt — wer sie antippt, will sie sehen.
 
 Auf der **Tastatur** bleibt das Feld nach dem Eintragen gewählt — sonst wäre das
-Weiterwandern mit den Pfeiltasten unterbrochen. Ohne Auswahl hebt eine Ziffer
-dort ebenfalls nur hervor; `Esc` wählt ab.
+Weiterwandern mit den Pfeiltasten unterbrochen. Ohne Auswahl und auf einem
+fertigen Feld hebt eine Ziffer dort ebenso nur hervor; `Esc` wählt ab.
 
 ## Vibration
 
@@ -354,7 +372,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-1.7`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-1.8`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 
