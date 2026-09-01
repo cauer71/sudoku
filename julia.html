@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sudoku Rosé — installieren</title>
+<meta name="description" content="Sudoku im Julia-Modus zum Startbildschirm hinzufügen — mit rosé Icon.">
+
+<!-- Diese Seite existiert, damit man zwischen zwei Icons wählen kann. Das
+     Betriebssystem bietet beim Installieren keine Auswahl an, sondern nimmt,
+     was die aufgerufene Seite vorgibt. Also gibt es zwei Seiten: index.html
+     mit dem blauen Manifest, diese hier mit dem rosé. start_url zeigt auf
+     ./?julia=1, die App startet daher im Julia-Modus. -->
+<meta name="theme-color" content="#eedcea">
+<link rel="manifest" href="manifest-julia.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-julia.png">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sudoku Rosé">
+<style>
+:root {
+  color-scheme: light;
+  --paper: #eedcea; --grid-line: rgba(70, 40, 70, .06);
+  --surface: #f7ebf3; --on-surface: #1e1a1e; --on-surface-variant: #4c444c;
+  --primary: #725572; --on-primary: #ffffff; --primary-container: #fdd7fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #150f14; --grid-line: rgba(240, 200, 235, .05);
+    --surface: #231d22; --on-surface: #eadfe7; --on-surface-variant: #cfc3ce;
+    --primary: #e0bbdd; --on-primary: #412742; --primary-container: #593d5a;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--on-surface);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 28px 28px, 28px 28px;
+  font-family: 'Roboto Flex', Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+main { max-width: 38ch; text-align: center; padding: 28px 24px 22px; border-radius: 16px; background: var(--surface); }
+img { width: 84px; height: 84px; border-radius: 19px; margin-bottom: 16px; }
+h1 { margin: 0 0 8px; font-size: 22px; line-height: 28px; font-weight: 600; }
+p { margin: 0 0 14px; font-size: 14px; line-height: 20px; color: var(--on-surface-variant); }
+ol { margin: 0 0 20px; padding-left: 1.3em; text-align: left; font-size: 14px; line-height: 21px; color: var(--on-surface-variant); }
+a.play {
+  display: inline-block; height: 40px; line-height: 40px; padding: 0 24px;
+  border-radius: 20px; background: var(--primary); color: var(--on-primary);
+  font-size: 14px; font-weight: 500; text-decoration: none;
+}
+a.play:hover { filter: brightness(1.08); }
+a.play:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+a.other { display: inline-block; margin-top: 14px; font-size: 13px; color: var(--primary); }
+</style>
+</head>
+<body>
+<main>
+  <img src="icons/icon-512-julia.png" alt="Rosé Icon von Sudoku">
+  <h1>Sudoku Rosé</h1>
+  <p>Diese Seite installiert das Spiel mit dem <strong>rosé Icon</strong>. Es startet dann von selbst im Julia-Modus.</p>
+  <ol>
+    <li><strong>iPhone:</strong> Teilen-Symbol → <em>Zum Home-Bildschirm</em></li>
+    <li><strong>Android:</strong> Menü ⋮ → <em>App installieren</em></li>
+  </ol>
+  <a class="play" href="./?julia=1">Jetzt spielen</a>
+  <br><a class="other" href="./">Lieber die blaue Fassung installieren</a>
+</main>
+</body>
+</html>

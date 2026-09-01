@@ -10,7 +10,7 @@
  *   - Alles andere (Icons, Manifest): erst Cache, dann Netz.
  */
 
-var VERSION = 'sudoku-v4';
+var VERSION = 'sudoku-v5';
 
 var ASSETS = [
   './',
@@ -21,7 +21,13 @@ var ASSETS = [
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
-  './icons/favicon-16.png'
+  './icons/favicon-16.png',
+  './julia.html',
+  './manifest-julia.webmanifest',
+  './icons/icon-192-julia.png',
+  './icons/icon-512-julia.png',
+  './icons/icon-maskable-512-julia.png',
+  './icons/apple-touch-icon-julia.png'
 ];
 
 self.addEventListener('install', function (event) {

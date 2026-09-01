@@ -26,13 +26,19 @@ const FILES = [
   'manifest.webmanifest',
   'sw.js',
   '404.html',
+  'julia.html',
+  'manifest-julia.webmanifest',
   '_headers',              // wird von Workers ausgewertet, nicht ausgeliefert
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
   'icons/apple-touch-icon.png',
   'icons/favicon-32.png',
-  'icons/favicon-16.png'
+  'icons/favicon-16.png',
+  'icons/icon-192-julia.png',
+  'icons/icon-512-julia.png',
+  'icons/icon-maskable-512-julia.png',
+  'icons/apple-touch-icon-julia.png'
 ];
 
 await rm(DIST, { recursive: true, force: true });

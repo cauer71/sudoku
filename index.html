@@ -978,6 +978,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         <label class="switch-row"><span>Notizen automatisch bereinigen</span><input type="checkbox" id="setClean" checked><span class="track"></span></label>
         <label class="switch-row"><span>Gleiche Zahlen hervorheben</span><input type="checkbox" id="setSame" checked><span class="track"></span></label>
         <label class="switch-row"><span>Julia-Modus <span class="switch-hint">rosa Farben</span></span><input type="checkbox" id="setJulia"><span class="track"></span></label>
+        <label class="switch-row"><span>Vibration <span class="switch-hint">beim Tippen</span></span><input type="checkbox" id="setHaptik" checked><span class="track"></span></label>
       </div>
 
       <div class="sheet-group sheet-divider">
@@ -1005,6 +1006,48 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   "use strict";
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
+
+  /* ==========================================================
+     Haptik
+     ==========================================================
+     Zwei Stärken: kurz für Notizen, etwas kräftiger für die Zahl.
+     Die Vibration-API kennt nur Dauern, keine Stärken — „kräftiger" ist
+     deshalb ein Doppelstoß, der sich deutlicher anfühlt.
+
+     Android/Chrome unterstützt navigator.vibrate. Safari auf iOS nicht:
+     Apple stellt Webseiten keine Haptik-Schnittstelle bereit. Ab iOS 17.4
+     löst allerdings ein Umschalter (<input type="checkbox" switch>) in einem
+     Label eine System-Haptik aus — das nutzen wir als Behelf. Ob es auf einem
+     bestimmten Gerät greift, lässt sich hier nicht prüfen; schlägt es fehl,
+     bleibt das Spiel unverändert bedienbar.
+     ========================================================== */
+
+  var hapticSwitch = null;
+  function initHaptics() {
+    if (hapticSwitch) return;
+    var label = document.createElement("label");
+    label.setAttribute("aria-hidden", "true");
+    label.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none";
+    var box = document.createElement("input");
+    box.type = "checkbox";
+    box.setAttribute("switch", "");        // der iOS-Behelf
+    box.tabIndex = -1;
+    label.appendChild(box);
+    document.body.appendChild(label);
+    hapticSwitch = { label: label, box: box };
+  }
+
+  function buzz(kind) {
+    if (!settings.haptik) return;
+    var pattern = (kind === "note") ? 8 : [16, 26, 16];
+    try {
+      if (navigator.vibrate) { navigator.vibrate(pattern); return; }
+    } catch (e) { /* nicht verfügbar */ }
+    try {
+      initHaptics();
+      hapticSwitch.label.click();          // iOS 17.4+
+    } catch (e) { /* dann eben ohne */ }
+  }
 
   /* ==========================================================
      Icons — Material Symbols Rounded als Inline-SVG
@@ -1258,7 +1301,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   var paused = false, won = false, busy = false;
   var notesMode = false;
   var best = {};
-  var settings = { check: true, clean: true, same: true, julia: false };
+  var settings = { check: true, clean: true, same: true, julia: false, haptik: true };
 
   // Zelle, die gerade eine Sekunde lang rot aufblitzt (-1 = keine)
   var blinkIndex = -1, blinkTimer = null;
@@ -1432,7 +1475,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       var s = localStorage.getItem(STORE + ".settings");
       if (s) {
         var p = JSON.parse(s) || {};
-        ["check", "clean", "same", "julia"].forEach(function (k) {
+        ["check", "clean", "same", "julia", "haptik"].forEach(function (k) {
           if (typeof p[k] === "boolean") settings[k] = p[k];
         });
       }
@@ -2123,11 +2166,13 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 
     if (asNote) {
       // Beim Notieren bleibt das Feld gewählt — meist trägt man mehrere ein.
+      buzz("note");
       toggleNote(i, n);
       cells[i].focus({ preventScroll: true });
       return;
     }
 
+    buzz("value");
     placeValue(i, n);
     if (board[i]) deselect(board[i]);   // gesetzt: abwählen und hervorheben
   }
@@ -2308,6 +2353,18 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      ========================================================== */
 
   loadMeta();
+
+  // Die rosé installierte Fassung startet über ./?julia=1. Der Parameter setzt
+  // den Modus verbindlich, damit sie auch nach geleertem Speicher rosé bleibt.
+  // ?julia=0 schaltet ihn entsprechend ab.
+  try {
+    var q = new URLSearchParams(location.search).get("julia");
+    if (q === "1" || q === "0") {
+      settings.julia = (q === "1");
+      saveMeta();
+    }
+  } catch (e) { /* ohne URL-Parameter bleibt es beim gespeicherten Wert */ }
+
   applyMode();
 
   // Erst NACH loadMeta binden: bindSwitch überträgt den Zustand in die
@@ -2324,6 +2381,10 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   bindSwitch("#setJulia", "julia", function () {
     applyMode();
     say(settings.julia ? "Julia-Modus an." : "Julia-Modus aus.");
+  });
+  bindSwitch("#setHaptik", "haptik", function () {
+    if (settings.haptik) buzz("value");        // einmal spüren lassen
+    say(settings.haptik ? "Vibration an." : "Vibration aus.");
   });
   segs.forEach(function (o) {
     o.setAttribute("aria-checked", o.dataset.diff === nextDifficulty ? "true" : "false");

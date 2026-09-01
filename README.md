@@ -81,6 +81,21 @@ hervorgehobenen Feld, in `#2b5db0` und `#d9e2ff` aus der M3-Palette. Es liegt in
 192, 512 (`any`), 512 (`maskable`, Inhalt innerhalb der mittleren 80 % für die
 Adaptivformen von Android), 180 für iOS sowie 32 und 16 als Favicon vor.
 
+### Zwei Icons zur Wahl
+
+Das Betriebssystem bietet beim Installieren keine Auswahl an — es nimmt, was
+die aufgerufene Seite vorgibt. Deshalb gibt es zwei Installationsseiten:
+
+| Seite | Icon | startet |
+|---|---|---|
+| `/` (`index.html`) | blau | im gespeicherten Modus |
+| `/julia.html` | rosé | über `./?julia=1` immer im Julia-Modus |
+
+Beide verweisen auf ihr eigenes Manifest; das rosé hat eine eigene `id`, Android
+behandelt es also als eigene App. Beide lassen sich nebeneinander installieren.
+Der Parameter `?julia=1` bzw. `?julia=0` setzt den Modus verbindlich, damit die
+rosé Fassung auch nach geleertem Speicher rosé bleibt.
+
 > Die Artefakt-Veröffentlichung ist eine einzelne HTML-Seite und kann keine
 > Manifest-, Icon- und Worker-Dateien mitbringen; installierbar ist deshalb nur
 > die gehostete Fassung. Der Bauschritt für das Artefakt entfernt die
@@ -160,6 +175,19 @@ andere Ziffer das gerade gefüllte Feld, obwohl man nur hervorheben wollte.
 Auf der **Tastatur** bleibt das Feld nach dem Eintragen gewählt — sonst wäre das
 Weiterwandern mit den Pfeiltasten unterbrochen. Ohne Auswahl hebt eine Ziffer
 dort ebenfalls nur hervor; `Esc` wählt ab.
+
+## Vibration
+
+In den Einstellungen abschaltbar (standardmäßig an). Zwei Stärken: ein kurzer
+Stoß (8 ms) für Notizen, ein kräftigerer Doppelstoß für die Zahl. Die
+Vibration-API kennt nur Dauern, keine Stärken — „kräftiger" ist deshalb ein
+Muster, das sich deutlicher anfühlt.
+
+Android und Chrome unterstützen `navigator.vibrate`. **Safari auf iOS nicht**:
+Apple stellt Webseiten keine Haptik-Schnittstelle bereit. Als Behelf löst ab
+iOS 17.4 ein verborgener Umschalter eine System-Haptik aus; ob das auf einem
+bestimmten Gerät greift, ist nicht zugesichert. Schlägt es fehl, bleibt das
+Spiel unverändert bedienbar.
 
 ## Beim Gewinnen
 
