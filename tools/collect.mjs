@@ -14,7 +14,7 @@
  *
  * Kein Bauen, nur Kopieren: die App selbst bleibt unverändert.
  */
-import { cp, mkdir, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, stat } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,6 +41,26 @@ const FILES = [
   'icons/apple-touch-icon-julia.png'
 ];
 
+// Die im Menü angezeigte Fassungsnummer und der Cache-Name des Service
+// Workers müssen dieselbe sein — sonst zeigt die App eine Nummer an, unter der
+// die Dateien nie ausgeliefert wurden. Hier geprüft, weil es der einzige
+// Schritt ist, den beide Dateien gemeinsam durchlaufen.
+const appVersion = (await readFile(join(ROOT, 'index.html'), 'utf8'))
+  .match(/var APP_VERSION = "([^"]+)"/);
+const swVersion = (await readFile(join(ROOT, 'sw.js'), 'utf8'))
+  .match(/var VERSION = 'sudoku-([^']+)'/);
+
+if (!appVersion || !swVersion) {
+  console.error('Fassungsnummer nicht gefunden: ' +
+    (appVersion ? '' : 'APP_VERSION in index.html ') + (swVersion ? '' : "VERSION in sw.js"));
+  process.exit(1);
+}
+if (appVersion[1] !== swVersion[1]) {
+  console.error(`Fassungsnummern gehen auseinander: index.html sagt ${appVersion[1]}, ` +
+    `sw.js sagt sudoku-${swVersion[1]}. Beide Stellen anfassen.`);
+  process.exit(1);
+}
+
 await rm(DIST, { recursive: true, force: true });
 
 const missing = [];
@@ -62,4 +82,4 @@ if (missing.length) {
   process.exit(1);
 }
 
-console.log('dist/ zusammengestellt — ' + FILES.length + ' Dateien');
+console.log('dist/ zusammengestellt — ' + FILES.length + ' Dateien, Fassung ' + appVersion[1]);

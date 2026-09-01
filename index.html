@@ -892,6 +892,20 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 .sheet-divider { padding-top: 4px; border-top: 1px solid var(--outline-variant); }
 .sheet-note { margin: 6px 0 0; font-size: 13px; line-height: 19px; color: var(--on-surface-variant); }
 
+/* Fassungsnummer, letzte Zeile im Menü. Zurückhaltend: sie soll auffindbar
+   sein, wenn man sie sucht, und sonst nicht auffallen. */
+.sheet-version {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--outline-variant);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  letter-spacing: .02em;
+  color: var(--on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+
 .sr-only {
   position: absolute; width: 1px; height: 1px;
   padding: 0; margin: -1px; overflow: hidden;
@@ -1060,6 +1074,8 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         <p class="sheet-note">Jedes Rätsel entsteht im Browser: ein zufälliges vollständiges Gitter, aus dem einzeln so lange Zahlen entfernt werden, wie die Lösung eindeutig bleibt.</p>
       </div>
 
+      <p class="sheet-version" id="appVersion"></p>
+
     </div>
   </section>
 </div>
@@ -1069,6 +1085,19 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   "use strict";
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
+
+  /* ==========================================================
+     Fassung
+     ==========================================================
+     Dieselbe Nummer steht im Cache-Namen des Service Workers
+     ("sudoku-1.6"); tools/collect.mjs prüft vor dem Ausliefern, dass beides
+     übereinstimmt. Beim Erhöhen also beide Stellen anfassen — dann holen
+     installierte Fassungen die neuen Dateien, und die angezeigte Nummer sagt
+     dasselbe wie der Cache.
+     ========================================================== */
+
+  var APP_VERSION = "1.6";
+  $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
      Haptik

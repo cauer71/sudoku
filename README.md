@@ -189,6 +189,9 @@ lässt das laufende Spiel in Ruhe, dafür gibt es „Rätsel erzeugen".
 nur den Grad des laufenden Spiels, weshalb bereits erspielte Zeiten unsichtbar
 blieben, sobald man den Grad gewechselt hatte.
 
+Ganz unten im Menü steht die **Fassungsnummer** — damit sich sagen lässt, welche
+Fassung auf einem Gerät gerade läuft.
+
 ## Ziffernleiste
 
 | Bedienung | Wirkung |
@@ -306,6 +309,17 @@ zwangsläufig klein — rund 22 px.
 Auf breiten Schirmen bleibt es dieselbe zentrierte Spalte; das Brett wird auf
 660 px begrenzt. Ein eigenes Desktop-Layout ist in der Vorlage als möglicher
 nächster Schritt vermerkt, aber nicht Teil von 1c.
+
+## Fassungsnummer
+
+Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
+sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
+(`sudoku-1.6`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
+angezeigte Nummer soll dasselbe sagen wie der Cache.
+
+`npm run collect` bricht ab, wenn die beiden auseinandergehen; die
+`test`-Prüfung vergleicht zusätzlich, was im Menü steht.
 
 ## Aufbau
 
