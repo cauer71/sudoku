@@ -106,36 +106,55 @@ folgt zur Laufzeit dem Papiergrund, also hell/dunkel und dem Julia-Modus.
 
 ### Das Icon
 
-Ein Sudoku-Brett: vollständiger 3×3-Block, ein Feld noch frei (die 2 fehlt),
-dünne Gitterlinien, kein Rahmen. Die Ziffern tragen **zwei Tinten, dieselben wie
-im Spiel** — schwarz für Vorgaben, die Markenfarbe für eigene Zahlen. Das Icon
-zeigt damit dasselbe wie das Brett: ein Rätsel im Gange, nicht ein Symbol dafür.
+Ein Sudoku-Brett: 3×3-Block, das Mittelfeld noch frei, dünne Gitterlinien, kein
+Rahmen. Die Ziffern tragen **zwei Tinten, dieselben wie im Spiel** — schwarz für
+Vorgaben, die Markenfarbe für eigene Zahlen. Das Icon zeigt damit dasselbe wie
+das Brett: ein Rätsel im Gange, nicht ein Symbol dafür.
 
 **Ziffern** sind das, woran man Sudoku erkennt; ein leeres Gitter sieht wie eine
 Tabelle aus. Deshalb bleiben sie in jeder Größe drin — bei 16 px sind sie nicht
 mehr zu lesen, aber als Ziffernform noch zu sehen, und das ist mehr, als ein
-leeres Gitter dort hergibt. Das freie Feld liegt in der Ecke, nicht in der
-Mitte: unsymmetrisch sieht es nach Rätsel aus, symmetrisch nach Muster.
+leeres Gitter dort hergibt. Die vier eigenen Zahlen liegen unsymmetrisch;
+gleichmäßig verteilt sähe es nach Muster aus, nicht nach Rätsel.
 
-Maße als Anteil der Kantenlänge: Abstand des Gitters zum Rand 6 %,
-Linienstärke 1 %, Schriftgröße 92 % der Feldbreite. Dazu eine gemessene
-Korrektur: `dominant-baseline: central` setzt die Ziffer in dieser Schrift 4,3 %
-der Feldhöhe zu hoch.
+Die Maße sind an einem Vorbild **gemessen**, nicht geschätzt (Icon eines
+Play-Store-Sudokus, 164 px im Screenshot):
+
+| | gemessen |
+|---|---|
+| Grund | `#e6e6e6`, randlos — der Rand hat dieselbe Farbe wie die Felder, deshalb sieht man ihn nicht als Rahmen |
+| Rand | ~7 % der Kantenlänge |
+| Zelle | 28,6 % |
+| Linie | ~1,2 px = 0,73 %, Farbe ~`#7b7b7b` — ein richtiges Mittelgrau |
+| Ziffernhöhe | 68 % der Zelle |
+| Strichstärke | 6,4 % der Zelle — das ist ein Regular, keine fette Schrift |
+
+Genau diese drei Dinge hatten die Vorgänger falsch: zu blasse Linien, zu fette
+Ziffern, und ein Grund, der sich vom Rand unterschied und damit doch wieder wie
+ein Rahmen aussah.
+
+Zwei Werte sind bewusst nicht übernommen: Grund und Linie kommen aus der Palette
+der App (`surface-container-highest` und `outline`), die dem Gemessenen bis auf
+wenige Stufen entsprechen. So bleibt das Icon an dieselben Farbwerte gebunden
+wie die Oberfläche. Dazu eine gemessene Korrektur: `dominant-baseline: central`
+setzt die Ziffer in dieser Schrift 4,3 % der Feldhöhe zu hoch.
+
+Unter 32 px trägt ein Regular nicht mehr — die Striche wären dünner als ein
+Bildpunkt. Die Favicons bekommen deshalb den fetten Schnitt.
 
 Die beiden Fassungen unterscheiden sich an der **Tinte der eigenen Zahlen** und
-an einer leichten Tönung des Grundes. Ein farbiger Rahmen wäre deutlicher,
-kostet aber die Fläche, welche die Ziffern brauchen — und genau das war an den
-Vorgängern das Störende. Blau ist `--primary` der App auf weißem Grund. Rosé
-liegt im Farbton der tertiary-Rolle, aber satter (`#a3418f` statt `#725572`):
-die Rolle selbst liest sich bei 44 px als dunkles Grau-Mauve, und dann ist nicht
-zu sehen, dass es das rosa Icon ist. Die Oberfläche im Julia-Modus behält die
-Werte der Vorlage unverändert; nur das Icon ist aufgehellt, weil es eine andere
-Aufgabe hat.
+an einer Tönung des Grundes. Ein farbiger Rahmen wäre deutlicher, ist aber genau
+das, was an den Vorgängern gestört hat. Blau ist `--primary` der App. Rosé liegt
+im Farbton der tertiary-Rolle, aber satter (`#a3418f` statt `#725572`): die Rolle
+selbst liest sich bei 44 px als dunkles Grau-Mauve, und dann ist nicht zu sehen,
+dass es das rosa Icon ist. Die Oberfläche im Julia-Modus behält die Werte der
+Vorlage unverändert; nur das Icon ist aufgehellt, weil es eine andere Aufgabe
+hat.
 
 Geprüft wird der Unterschied nicht an einer festen Bildstelle, sondern als
-Mittel über alle **farbigen** Bildpunkte: weiß, grau und schwarz fallen heraus,
-übrig bleibt die Tinte. Gemessen liegen die beiden 126 auseinander (blau
-47/96/178, rosé 165/68/145).
+Mittel über alle **farbigen** Bildpunkte: Grau und Schwarz fallen heraus, übrig
+bleibt die Tinte. Gemessen liegen die beiden 124 auseinander (blau 49/97/178,
+rosé 165/69/146).
 
 Größen: 192, 512 (`any`), 512 (`maskable`), 180 für iOS, dazu 32 und 16 als
 Favicon. Beim maskable-Icon füllt das Brett nicht das Icon, sondern liegt
@@ -388,7 +407,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.0`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.1`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 
