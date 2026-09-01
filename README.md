@@ -47,10 +47,38 @@ Wege laufen parallel aus denselben Dateien; kopiert wird nur, nicht gebaut.
 
 | Datei | Zweck |
 |---|---|
-| `wrangler.jsonc` | Name, Asset-Verzeichnis, Fehlerseiten-Verhalten |
+| `wrangler.jsonc` | Name, Asset-Verzeichnis, Fehlerseiten-Verhalten, D1-Bindung |
 | `_headers` | Cache-Regeln und Sicherheits-Kopfzeilen |
 | `404.html` | eigene Fehlerseite (nutzt auch GitHub Pages) |
 | `tools/collect.mjs` | stellt `dist/` zusammen |
+| `worker/index.js` | beantwortet `/api/scores` für die Rangliste |
+| `schema.sql` | Tabelle der Rangliste |
+
+### Gemeinsame Rangliste (D1)
+
+Datenbank `sudoku-rangliste` (Cloudflare D1, Region Westeuropa), gebunden als
+`DB`. Eine Zeile je Name und Grad, immer die beste Zeit; der Worker schreibt
+per UPSERT und übernimmt nur, was schneller ist.
+
+```bash
+# Schema auf die echte Datenbank anwenden (einmalig)
+npx wrangler d1 execute sudoku-rangliste --remote --file schema.sql
+```
+
+Der Worker läuft nur für `/api/...`; statische Dateien liefert die Asset-Schicht
+weiterhin direkt aus, samt `_headers`. Unbekannte Pfade gibt der Worker an die
+Asset-Schicht zurück, die dann `404.html` liefert.
+
+**Was diese Rangliste nicht kann:** Sie hat keine Konten. Wer die Adresse kennt,
+kann Zeiten senden — gegen Falscheinträge ist eine offene Rangliste nicht
+absicherbar. Geprüft wird, was prüfbar ist: Name 1–24 Zeichen ohne
+Steuerzeichen, Grad aus der bekannten Liste, Zeit zwischen 20 s und einem Tag,
+Fehler- und Tippzahl 0–999. Namen werden ausschließlich über `textContent`
+angezeigt, damit eingesandtes Markup Text bleibt.
+
+Der Name steht im Menü unter *Rangliste*. Ohne Namen wird nichts gesendet. Die
+örtlichen Bestzeiten funktionieren unabhängig davon weiter, auch offline und in
+der GitHub-Pages-Fassung — dort gibt es die Rangliste einfach nicht.
 
 `not_found_handling` steht auf `404-page`, bewusst **nicht** auf
 `single-page-application`: letzteres liefert für jeden unbekannten Pfad

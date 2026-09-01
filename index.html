@@ -675,6 +675,47 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 .time-row.is-empty dd { color: var(--on-surface-variant); font-weight: 400; }
 .dialog-note { margin: 8px 2px 0; font-size: 13px; line-height: 18px; color: var(--on-surface-variant); }
 
+.dialog-sub {
+  margin: 18px 0 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--outline-variant);
+  font-size: 12px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+}
+.board-group { margin-bottom: 10px; }
+.board-group > b { display: block; font-size: 13px; font-weight: 600; margin: 6px 2px 2px; }
+.board-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  font-size: 14px;
+}
+.board-entry:nth-child(odd) { background: var(--surface-container); }
+.board-entry .rank { width: 1.6em; color: var(--on-surface-variant); font-variant-numeric: tabular-nums; }
+.board-entry .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-entry .sec { font-variant-numeric: tabular-nums; font-weight: 600; }
+.board-empty { font-size: 13px; color: var(--on-surface-variant); margin: 4px 2px; }
+
+/* Namensfeld */
+.field { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; }
+.field-label { font-size: 13px; color: var(--on-surface-variant); }
+.field-input {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--outline);
+  border-radius: var(--r-pill);
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  font-family: inherit;
+  font-size: 15px;
+}
+.field-input:focus-visible { outline: 3px solid var(--primary); outline-offset: 1px; }
+
 /* ---------- Feuerwerk beim Gewinnen ---------- */
 
 .fx {
@@ -956,6 +997,10 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     <h2 class="dialog-title" id="dialogTitle">Bestzeiten</h2>
     <dl class="times" id="bestList"></dl>
     <p class="dialog-note" id="bestNote"></p>
+    <div class="board-section" id="boardSection" hidden>
+      <h3 class="dialog-sub">Rangliste</h3>
+      <div id="boardList"></div>
+    </div>
     <button class="btn-text" id="btnDialogClose" type="button">Schließen</button>
   </div>
 
@@ -979,6 +1024,17 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         <label class="switch-row"><span>Gleiche Zahlen hervorheben</span><input type="checkbox" id="setSame" checked><span class="track"></span></label>
         <label class="switch-row"><span>Julia-Modus <span class="switch-hint">rosa Farben</span></span><input type="checkbox" id="setJulia"><span class="track"></span></label>
         <label class="switch-row"><span>Vibration <span class="switch-hint">beim Tippen</span></span><input type="checkbox" id="setHaptik" checked><span class="track"></span></label>
+      </div>
+
+      <div class="sheet-group">
+        <span class="sheet-label">Rangliste</span>
+        <label class="field">
+          <span class="field-label" for="setName">Name für die Rangliste</span>
+          <input class="field-input" id="setName" type="text" maxlength="24" autocomplete="nickname"
+                 placeholder="leer = nicht eintragen" spellcheck="false">
+        </label>
+        <p class="sheet-note">Ohne Namen wird nichts gesendet. Mit Namen erscheint deine
+        Bestzeit für jeden sichtbar, der die Adresse kennt.</p>
       </div>
 
       <div class="sheet-group sheet-divider">
@@ -1301,6 +1357,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   var paused = false, won = false, busy = false;
   var notesMode = false;
   var best = {};
+  var playerName = "";        // leer = nicht in die Rangliste eintragen
   var settings = { check: true, clean: true, same: true, julia: false, haptik: true };
 
   // Zelle, die gerade eine Sekunde lang rot aufblitzt (-1 = keine)
@@ -1465,6 +1522,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       localStorage.setItem(STORE + ".best", JSON.stringify(best));
       localStorage.setItem(STORE + ".settings", JSON.stringify(settings));
       localStorage.setItem(STORE + ".next", nextDifficulty);
+      localStorage.setItem(STORE + ".name", playerName);
     } catch (e) { /* still */ }
   }
 
@@ -1481,6 +1539,8 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       }
       var nd = localStorage.getItem(STORE + ".next");
       if (nd && DIFFS[nd]) nextDifficulty = nd;
+      var nm = localStorage.getItem(STORE + ".name");
+      if (typeof nm === "string") playerName = nm.slice(0, 24);
     } catch (e) { /* still */ }
   }
 
@@ -1969,6 +2029,11 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     btn.addEventListener("click", function () { newGame(nextDifficulty); });
     setTimeout(function () { btn.focus(); }, 60);
 
+    // In die gemeinsame Rangliste eintragen, falls ein Name gesetzt ist.
+    submitScore(key, elapsed).then(function (d) {
+      if (d && d.improved) say("In der Rangliste eingetragen: " + fmtTime(elapsed) + ".");
+    });
+
     render(); save();
   }
 
@@ -2105,6 +2170,88 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     if (sheetOpen()) setSheet(false);
   }
 
+  /* ----------------------------------------------------------
+     Gemeinsame Rangliste (Cloudflare D1 über /api/scores)
+
+     Erreichbar nur in der auf Cloudflare veröffentlichten Fassung. Sonst —
+     lokal, auf GitHub Pages, im Artefakt — antwortet niemand; dann bleibt es
+     bei den örtlichen Bestzeiten und die Rangliste wird nicht angezeigt.
+     ---------------------------------------------------------- */
+
+  var boardData = null;        // zuletzt geladene Rangliste
+  var boardSectionEl = $("#boardSection");
+  var boardListEl = $("#boardList");
+
+  function apiAvailable() {
+    return location.protocol.indexOf("http") === 0;
+  }
+
+  function loadBoard() {
+    if (!apiAvailable()) return Promise.resolve(null);
+    return fetch("api/scores", { headers: { accept: "application/json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { boardData = (d && d.scores) || null; return boardData; })
+      .catch(function () { return null; });      // keine Rangliste ist kein Fehler
+  }
+
+  function submitScore(diff, seconds) {
+    if (!apiAvailable() || !playerName || seconds < 20) return Promise.resolve(null);
+    return fetch("api/scores", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: playerName, difficulty: diff, seconds: seconds,
+        mistakes: mistakes, hints: hints
+      })
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.scores) boardData = d.scores; return d; })
+      .catch(function () { return null; });
+  }
+
+  // Namen ausschliesslich über textContent setzen — sie stammen von anderen
+  // Leuten und dürfen niemals als Markup ausgewertet werden.
+  function renderBoard() {
+    if (!boardData) { boardSectionEl.hidden = true; return; }
+    boardSectionEl.hidden = false;
+    boardListEl.textContent = "";
+    var any = false;
+
+    Object.keys(DIFFS).forEach(function (k) {
+      var rows = boardData[k] || [];
+      if (!rows.length) return;
+      any = true;
+      var group = document.createElement("div");
+      group.className = "board-group";
+      var head = document.createElement("b");
+      head.textContent = DIFFS[k].label;
+      group.appendChild(head);
+      rows.slice(0, 5).forEach(function (row, idx) {
+        var line = document.createElement("div");
+        line.className = "board-entry";
+        var rank = document.createElement("span");
+        rank.className = "rank";
+        rank.textContent = (idx + 1) + ".";
+        var who = document.createElement("span");
+        who.className = "who";
+        who.textContent = row.name;                  // niemals innerHTML
+        var sec = document.createElement("span");
+        sec.className = "sec";
+        sec.textContent = fmtTime(row.seconds);
+        line.appendChild(rank); line.appendChild(who); line.appendChild(sec);
+        group.appendChild(line);
+      });
+      boardListEl.appendChild(group);
+    });
+
+    if (!any) {
+      var p2 = document.createElement("p");
+      p2.className = "board-empty";
+      p2.textContent = "Noch keine Einträge. Trage im Menü einen Namen ein, dann zählt dein nächstes gelöstes Rätsel.";
+      boardListEl.appendChild(p2);
+    }
+  }
+
   // Bestzeiten aller vier Grade — der Knopf zeigte vorher nur den Grad des
   // laufenden Spiels, weshalb vorhandene Zeiten unsichtbar blieben.
   function showBestTimes() {
@@ -2121,7 +2268,10 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     bestNoteEl.textContent = any
       ? "Hervorgehoben ist der Grad des laufenden Spiels."
       : "Noch keine Bestzeit — sie entsteht, sobald ein Rätsel gelöst ist.";
+    renderBoard();
     setDialog(true);
+    // Nachladen und still auffrischen, sobald die Antwort da ist.
+    loadBoard().then(renderBoard);
   }
 
   btnMenu.addEventListener("click", function () { setSheet(!sheetOpen()); });
@@ -2382,6 +2532,17 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     applyMode();
     say(settings.julia ? "Julia-Modus an." : "Julia-Modus aus.");
   });
+  (function bindName() {
+    var el = $("#setName");
+    el.value = playerName;
+    el.addEventListener("change", function () {
+      playerName = el.value.replace(/\s+/g, " ").trim().slice(0, 24);
+      el.value = playerName;
+      saveMeta();
+      say(playerName ? "Rangliste: als „" + playerName + "“ eintragen." : "Rangliste: kein Eintrag.");
+    });
+  })();
+
   bindSwitch("#setHaptik", "haptik", function () {
     if (settings.haptik) buzz("value");        // einmal spüren lassen
     say(settings.haptik ? "Vibration an." : "Vibration aus.");

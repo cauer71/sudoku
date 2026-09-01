@@ -9,8 +9,24 @@
   "name": "sudoku",
   "compatibility_date": "2026-08-28",
 
+  // Der Worker beantwortet nur /api/... — statische Dateien liefert die
+  // Asset-Schicht direkt aus, ohne ihn aufzurufen.
+  "main": "./worker/index.js",
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sudoku-rangliste",
+      "database_id": "a5f5ca17-3d38-497c-881e-d1126b84649c"
+    }
+  ],
+
   "assets": {
     "directory": "./dist",
+
+    // Nötig, damit der Worker unbekannte Pfade an die Asset-Schicht
+    // zurückgeben kann; die liefert dann 404.html.
+    "binding": "ASSETS",
 
     // Die App hat nur eine Seite, also keine Client-Routen. Bewusst NICHT
     // "single-page-application": das liefert für jeden unbekannten Pfad
