@@ -13,9 +13,9 @@
      angemeldet. -->
 <meta name="theme-color" content="#dfe4ee">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.2">
-<link rel="icon" href="icons/favicon-32.png?v=2.2" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png?v=2.2" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.3">
+<link rel="icon" href="icons/favicon-32.png?v=2.3" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=2.3" sizes="16x16" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -763,6 +763,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   z-index: 21;
   max-height: 86%;
   overflow-y: auto;
+  overscroll-behavior: contain;         /* kein Mitziehen der Seite am Ende */
   padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
   border-radius: 28px 28px 0 0;
   background: var(--surface-container-low);
@@ -773,7 +774,12 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 }
 .sheet.open { transform: none; visibility: visible; }
 
-.grabber { width: 32px; height: 4px; margin: 0 auto 14px; border-radius: 2px; background: var(--outline-variant); }
+/* Der Griff bekommt eine eigene Trefffläche und touch-action: none. Damit
+   gehört die Gebärde sicher uns: sonst kann der Browser sie mitten im Zug als
+   Scrollen des Blattes beanspruchen und schickt ein pointercancel. */
+.grab { touch-action: none; padding: 2px 0 12px; margin: 0 -20px; cursor: grab; }
+.grab:active { cursor: grabbing; }
+.grabber { width: 36px; height: 4px; margin: 0 auto; border-radius: 2px; background: var(--outline-variant); }
 .sheet-body { display: flex; flex-direction: column; gap: 22px; }
 .sheet-group { display: flex; flex-direction: column; gap: 10px; }
 
@@ -1039,7 +1045,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   <canvas class="fx" id="fx" aria-hidden="true"></canvas>
 
   <section class="sheet" id="sheet" aria-label="Menü">
-    <div class="grabber" aria-hidden="true"></div>
+    <div class="grab" id="grab" aria-hidden="true"><div class="grabber"></div></div>
     <div class="sheet-body">
 
       <div class="sheet-group">
@@ -1056,10 +1062,11 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         <label class="switch-row"><span>Gleiche Zahlen hervorheben</span><input type="checkbox" id="setSame" checked><span class="track"></span></label>
         <label class="switch-row"><span>Julia-Modus <span class="switch-hint">rosa Farben</span></span><input type="checkbox" id="setJulia"><span class="track"></span></label>
         <label class="switch-row"><span>Vibration <span class="switch-hint">beim Tippen</span></span><input type="checkbox" id="setHaptik" checked><span class="track"></span></label>
-        <p class="sheet-note">Spürt man nichts, liegt es meist am Gerät: Vibration
-        beim Tippen muss in den Systemeinstellungen an sein, und im Lautlos-Modus
-        unterdrücken manche Geräte sie. Auf dem iPhone stellt Safari Webseiten
-        keine Vibration bereit.</p>
+        <button class="btn-text" id="btnHaptik" type="button">Vibration testen</button>
+        <p class="sheet-note" id="haptikNote" role="status" aria-live="polite">Spürt man nichts,
+        liegt es meist am Gerät: Vibration beim Tippen muss in den Systemeinstellungen
+        an sein, und im Lautlos-Modus unterdrücken manche Geräte sie. Auf dem iPhone
+        stellt Safari Webseiten keine Vibration bereit.</p>
       </div>
 
       <div class="sheet-group">
@@ -1120,7 +1127,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      dasselbe wie der Cache.
      ========================================================== */
 
-  var APP_VERSION = "2.2";
+  var APP_VERSION = "2.3";
   $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
@@ -2407,6 +2414,78 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 
   btnMenu.addEventListener("click", function () { setSheet(!sheetOpen()); });
   scrimEl.addEventListener("click", closeOverlays);
+
+  /* ----------------------------------------------------------
+     Blatt nach unten wegwischen
+     ----------------------------------------------------------
+     Der Griff oben lädt dazu ein, und am Telefon ist es die erwartete Gebärde.
+     Bisher ging das Blatt nur über den Menüknopf, die Abdunklung oder Esc zu.
+
+     Drei Dinge sind dabei zu beachten:
+
+       - Das Blatt scrollt selbst. Gezogen wird nur, wenn es schon ganz oben
+           steht; sonst gehört die Bewegung dem Scrollen.
+       - Ein Zug, der auf einem Schalter beginnt, darf ihn nicht umschalten.
+           Nach einem Zug über die Schwelle wird der folgende Klick verworfen.
+       - Am Griff liegt touch-action: none, damit der Browser die Gebärde nicht
+           mitten im Zug als Scrollen beansprucht. Beginnt der Zug woanders,
+           versuchen wir es trotzdem; bricht der Browser ab, bleibt das Blatt
+           einfach offen.
+     ---------------------------------------------------------- */
+
+  var DRAG_MIN = 10;        // darunter ist es ein Tipp, kein Zug
+  var DRAG_CLOSE = 90;      // so weit gezogen: schließen
+  var DRAG_FLICK = 0.5;     // px/ms nach unten: schließen, auch wenn kürzer
+  var dragY0 = 0, dragDY = 0, dragT0 = 0;
+  var dragArmed = false, dragging = false, dragSuppressClick = false;
+
+  sheetEl.addEventListener("pointerdown", function (e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (sheetEl.scrollTop > 0) return;          // erst scrollen, dann ziehen
+    dragArmed = true;
+    dragging = false;
+    dragY0 = e.clientY;
+    dragDY = 0;
+    dragT0 = e.timeStamp;
+  });
+
+  sheetEl.addEventListener("pointermove", function (e) {
+    if (!dragArmed) return;
+    var dy = e.clientY - dragY0;
+    if (!dragging) {
+      if (dy <= -DRAG_MIN) { dragArmed = false; return; }   // nach oben: scrollen
+      if (dy < DRAG_MIN) return;                            // noch zu kurz
+      dragging = true;
+      sheetEl.style.transition = "none";
+      try { sheetEl.setPointerCapture(e.pointerId); } catch (err) { /* dann ohne */ }
+    }
+    dragDY = Math.max(0, dy);
+    sheetEl.style.transform = "translateY(" + dragDY + "px)";
+  });
+
+  function dragEnd(e) {
+    if (!dragArmed) return;
+    var zog = dragging;
+    var weg = dragDY;
+    var v = weg / Math.max(1, e.timeStamp - dragT0);
+    dragArmed = false;
+    dragging = false;
+    sheetEl.style.transition = "";               // wieder die Regel aus dem Stylesheet
+    sheetEl.style.transform = "";
+    if (!zog) return;
+    dragSuppressClick = true;                    // der Klick gehörte zum Zug
+    if (weg > DRAG_CLOSE || v > DRAG_FLICK) setSheet(false);
+  }
+  sheetEl.addEventListener("pointerup", dragEnd);
+  sheetEl.addEventListener("pointercancel", dragEnd);
+
+  // Muss in der Aufnahmephase liegen, sonst hat der Schalter schon umgeschaltet.
+  sheetEl.addEventListener("click", function (e) {
+    if (!dragSuppressClick) return;
+    dragSuppressClick = false;
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
   $("#btnDialogClose").addEventListener("click", function () { setDialog(false); });
   // Der Grad oben öffnet das Menü, wo die vier Grade stehen.
   $("#btnDiff").addEventListener("click", function () { setSheet(true); });
@@ -2779,18 +2858,54 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 
   installState();
 
-  bindSwitch("#setHaptik", "haptik", function () {
-    if (!settings.haptik) { say("Vibration aus."); return; }
-    // Einmal spüren lassen — und sagen, was daraus wurde. Ohne diese Rückmeldung
-    // ist „vibriert nicht" nicht auseinanderzuhalten: fehlende Schnittstelle,
-    // abgelehnter Aufruf oder eine Systemeinstellung, die es unterdrückt.
-    if (!navigator.vibrate) {
-      say("Vibration an — dieser Browser stellt aber keine bereit (auf dem iPhone ist das so).", true);
+  /* ----------------------------------------------------------
+     Vibration prüfen
+     ----------------------------------------------------------
+     „Vibriert nicht" hat mindestens vier Ursachen — keine Schnittstelle,
+     abgelehnter Aufruf, Systemeinstellung aus, Lautlos-Modus — und keine davon
+     ist am Bildschirm zu sehen. navigator.vibrate liefert zurück, ob der Aufruf
+     angenommen wurde; das steht hier.
+
+     Die Rückmeldung gehört ins Blatt, nicht in die Zeile unter dem Spielfeld:
+     die liegt hinter dem geöffneten Menü und ist genau dann unsichtbar, wenn man
+     sie braucht. Derselbe Fehler wie beim ersten Versuch.
+     ---------------------------------------------------------- */
+
+  var HAPTIK_HINWEIS = "Spürt man nichts, liegt es meist am Gerät: Vibration beim "
+    + "Tippen muss in den Systemeinstellungen an sein, und im Lautlos-Modus "
+    + "unterdrücken manche Geräte sie. Auf dem iPhone stellt Safari Webseiten "
+    + "keine Vibration bereit.";
+
+  var haptikNote = $("#haptikNote");
+
+  function haptikSagen(text) { if (haptikNote) haptikNote.textContent = text; }
+
+  function haptikPruefen() {
+    if (!settings.haptik) {
+      haptikSagen("Der Schalter steht auf aus — dann vibriert nichts. " + HAPTIK_HINWEIS);
       return;
     }
-    say(buzz("value")
-      ? "Vibration an."
-      : "Vibration an, aber der Browser hat sie abgelehnt. Am Gerät prüfen: Lautlos-Modus und die Systemeinstellung für Vibration beim Tippen.", true);
+    if (!navigator.vibrate) {
+      haptikSagen("Dieser Browser stellt Webseiten keine Vibration bereit — auf dem "
+        + "iPhone ist das so. Am Spiel ändert das nichts.");
+      return;
+    }
+    if (buzz("value")) {
+      haptikSagen("Der Browser hat die Vibration angenommen (35-30-35 ms). Spürst du "
+        + "trotzdem nichts, unterdrückt das Gerät sie: Lautlos-Modus und die "
+        + "Systemeinstellung für Vibration beim Tippen prüfen.");
+    } else {
+      haptikSagen("Der Browser hat die Vibration abgelehnt. Am Gerät prüfen: "
+        + "Lautlos-Modus und die Systemeinstellung für Vibration beim Tippen.");
+    }
+  }
+
+  $("#btnHaptik").addEventListener("click", haptikPruefen);
+
+  bindSwitch("#setHaptik", "haptik", function () {
+    if (settings.haptik) haptikPruefen();
+    else haptikSagen("Vibration aus. " + HAPTIK_HINWEIS);
+    say(settings.haptik ? "Vibration an." : "Vibration aus.");
   });
   segs.forEach(function (o) {
     o.setAttribute("aria-checked", o.dataset.diff === nextDifficulty ? "true" : "false");

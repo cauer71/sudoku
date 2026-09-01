@@ -304,6 +304,24 @@ Der Schalter **Gleiche Zahlen hervorheben** regelt nur das automatische
 Hervorheben, das vom gewählten Feld ausgeht. Eine ausdrücklich angetippte Ziffer
 wird immer gezeigt — wer sie antippt, will sie sehen.
 
+## Menü-Blatt
+
+Das Blatt fährt von unten ein und geht auf vier Wegen wieder zu: **nach unten
+wegwischen**, Menüknopf, Tippen auf die Abdunklung, `Esc`.
+
+Die Wischgebärde hat drei Fallen, und alle drei sind geprüft:
+
+- Das Blatt **scrollt selbst**. Gezogen wird nur, wenn es schon ganz oben steht;
+  sonst gehört die Bewegung dem Scrollen.
+- Ein Zug, der **auf einem Schalter beginnt**, darf ihn nicht umschalten. Nach
+  einem Zug über die Schwelle (10 px) wird der folgende Klick in der
+  Aufnahmephase verworfen. Ein Tipp schaltet weiterhin um.
+- Am Griff liegt `touch-action: none`. Sonst kann der Browser die Gebärde mitten
+  im Zug als Scrollen beanspruchen und schickt ein `pointercancel`.
+
+Geschlossen wird ab 90 px Zug oder ab einem schnellen Wisch (0,5 px/ms) — sonst
+federt das Blatt zurück.
+
 Auf der **Tastatur** bleibt das Feld nach dem Eintragen gewählt — sonst wäre das
 Weiterwandern mit den Pfeiltasten unterbrochen. Ohne Auswahl und auf einem
 fertigen Feld hebt eine Ziffer dort ebenso nur hervor; `Esc` wählt ab.
@@ -339,16 +357,22 @@ Spiel unverändert bedienbar.
 
 „Vibriert nicht" hat mindestens vier Ursachen, und keine davon ist am Bildschirm
 zu erkennen: keine Schnittstelle, abgelehnter Aufruf, Systemeinstellung aus,
-Lautlos-Modus. Deshalb sagt der Schalter beim Einschalten, was daraus wurde —
-`navigator.vibrate` liefert zurück, ob der Aufruf angenommen wurde:
+Lautlos-Modus. Deshalb gibt es im Menü **Vibration testen** — der Knopf löst sie
+aus und schreibt darunter, was daraus wurde. `navigator.vibrate` liefert zurück,
+ob der Aufruf angenommen wurde:
 
-- keine Schnittstelle → „dieser Browser stellt keine bereit (auf dem iPhone ist
-  das so)"
-- Aufruf abgelehnt → „der Browser hat sie abgelehnt" plus Hinweis auf
-  Lautlos-Modus und Systemeinstellung
-- angenommen → „Vibration an." und man spürt es einmal
+| | Rückmeldung |
+|---|---|
+| keine Schnittstelle | „Dieser Browser stellt Webseiten keine Vibration bereit — auf dem iPhone ist das so." |
+| Aufruf abgelehnt | „Der Browser hat die Vibration abgelehnt." plus Hinweis auf Lautlos-Modus und Systemeinstellung |
+| angenommen | „Der Browser hat die Vibration angenommen (35-30-35 ms)." — spürt man dann nichts, unterdrückt das Gerät sie |
+| Schalter aus | „Der Schalter steht auf aus — dann vibriert nichts." |
 
-Unter dem Schalter steht dauerhaft der Hinweis, wo am Gerät nachzusehen ist.
+Der erste Versuch schrieb das in die Statuszeile unter dem Spielfeld — und die
+liegt hinter dem geöffneten Menü. Die Rückmeldung war also genau dann unsichtbar,
+wenn man sie braucht. Sie steht jetzt im Blatt, direkt unter dem Schalter, und
+die `haptik`-Prüfung stellt mit `elementFromPoint` sicher, dass sie dort auch
+frei liegt.
 
 ## Beim Gewinnen
 
@@ -436,7 +460,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.2`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.3`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 
