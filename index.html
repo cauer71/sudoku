@@ -13,9 +13,9 @@
      angemeldet. -->
 <meta name="theme-color" content="#dfe4ee">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.1">
-<link rel="icon" href="icons/favicon-32.png?v=2.1" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png?v=2.1" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.2">
+<link rel="icon" href="icons/favicon-32.png?v=2.2" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=2.2" sizes="16x16" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1056,6 +1056,10 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         <label class="switch-row"><span>Gleiche Zahlen hervorheben</span><input type="checkbox" id="setSame" checked><span class="track"></span></label>
         <label class="switch-row"><span>Julia-Modus <span class="switch-hint">rosa Farben</span></span><input type="checkbox" id="setJulia"><span class="track"></span></label>
         <label class="switch-row"><span>Vibration <span class="switch-hint">beim Tippen</span></span><input type="checkbox" id="setHaptik" checked><span class="track"></span></label>
+        <p class="sheet-note">Spürt man nichts, liegt es meist am Gerät: Vibration
+        beim Tippen muss in den Systemeinstellungen an sein, und im Lautlos-Modus
+        unterdrücken manche Geräte sie. Auf dem iPhone stellt Safari Webseiten
+        keine Vibration bereit.</p>
       </div>
 
       <div class="sheet-group">
@@ -1116,7 +1120,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      dasselbe wie der Cache.
      ========================================================== */
 
-  var APP_VERSION = "2.1";
+  var APP_VERSION = "2.2";
   $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
@@ -1149,16 +1153,29 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     hapticSwitch = { label: label, box: box };
   }
 
+  /**
+   * Dauern in Millisekunden. Die erste Fassung hatte 8 ms für die Notiz und
+   * zwei Stöße von 16 ms für die Zahl — das ist zu kurz: ein Vibrationsmotor
+   * braucht einige Millisekunden, bis er überhaupt anläuft, und Android rundet
+   * sehr kurze Anforderungen weg. Unter etwa 15 ms spürt man auf den meisten
+   * Geräten nichts. Beide Werte liegen jetzt darüber und bleiben deutlich
+   * verschieden: ein kurzer Tick gegen einen doppelten, satten Stoß.
+   */
+  var BUZZ = { note: 18, value: [35, 30, 35] };
+
+  /** Gibt zurück, ob der Browser die Vibration angenommen hat. */
   function buzz(kind) {
-    if (!settings.haptik) return;
-    var pattern = (kind === "note") ? 8 : [16, 26, 16];
+    if (!settings.haptik) return true;
+    var pattern = (kind === "note") ? BUZZ.note : BUZZ.value;
     try {
-      if (navigator.vibrate) { navigator.vibrate(pattern); return; }
+      // vibrate() liefert false, wenn der Browser den Aufruf verwirft.
+      if (navigator.vibrate) return navigator.vibrate(pattern) !== false;
     } catch (e) { /* nicht verfügbar */ }
     try {
       initHaptics();
       hapticSwitch.label.click();          // iOS 17.4+
     } catch (e) { /* dann eben ohne */ }
+    return false;
   }
 
   /* ==========================================================
@@ -2763,8 +2780,17 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   installState();
 
   bindSwitch("#setHaptik", "haptik", function () {
-    if (settings.haptik) buzz("value");        // einmal spüren lassen
-    say(settings.haptik ? "Vibration an." : "Vibration aus.");
+    if (!settings.haptik) { say("Vibration aus."); return; }
+    // Einmal spüren lassen — und sagen, was daraus wurde. Ohne diese Rückmeldung
+    // ist „vibriert nicht" nicht auseinanderzuhalten: fehlende Schnittstelle,
+    // abgelehnter Aufruf oder eine Systemeinstellung, die es unterdrückt.
+    if (!navigator.vibrate) {
+      say("Vibration an — dieser Browser stellt aber keine bereit (auf dem iPhone ist das so).", true);
+      return;
+    }
+    say(buzz("value")
+      ? "Vibration an."
+      : "Vibration an, aber der Browser hat sie abgelehnt. Am Gerät prüfen: Lautlos-Modus und die Systemeinstellung für Vibration beim Tippen.", true);
   });
   segs.forEach(function (o) {
     o.setAttribute("aria-checked", o.dataset.diff === nextDifficulty ? "true" : "false");

@@ -310,16 +310,45 @@ fertigen Feld hebt eine Ziffer dort ebenso nur hervor; `Esc` wählt ab.
 
 ## Vibration
 
-In den Einstellungen abschaltbar (standardmäßig an). Zwei Stärken: ein kurzer
-Stoß (8 ms) für Notizen, ein kräftigerer Doppelstoß für die Zahl. Die
-Vibration-API kennt nur Dauern, keine Stärken — „kräftiger" ist deshalb ein
+In den Einstellungen abschaltbar (standardmäßig an). Zwei Stärken:
+
+| Anlass | Muster |
+|---|---|
+| Zahl eintragen | `[35, 30, 35]` ms — zwei satte Stöße |
+| Notiz setzen, Ziffer hervorheben | `18` ms — ein kurzer Tick |
+
+Die Vibration-API kennt nur Dauern, keine Stärken — „kräftiger" ist deshalb ein
 Muster, das sich deutlicher anfühlt.
+
+Die erste Fassung hatte 8 ms für den Tick und zwei Stöße von 16 ms für die Zahl.
+**Das war zu kurz.** Ein Vibrationsmotor braucht einige Millisekunden, bis er
+anläuft, und Android rundet sehr kurze Anforderungen weg; unter etwa 15 ms spürt
+man auf den meisten Geräten nichts. Aufgefallen ist es erst, als das Antippen
+einer Ziffer auf einem fertigen Feld vom Eintragen zum Hervorheben wurde: damit
+lief plötzlich ein großer Teil der Tipper über den kurzen Tick, und der war nicht
+zu spüren. Beide Werte liegen jetzt über der Schwelle und bleiben deutlich
+verschieden.
 
 Android und Chrome unterstützen `navigator.vibrate`. **Safari auf iOS nicht**:
 Apple stellt Webseiten keine Haptik-Schnittstelle bereit. Als Behelf löst ab
 iOS 17.4 ein verborgener Umschalter eine System-Haptik aus; ob das auf einem
 bestimmten Gerät greift, ist nicht zugesichert. Schlägt es fehl, bleibt das
 Spiel unverändert bedienbar.
+
+### Warum es nicht vibriert, ist von außen nicht zu sehen
+
+„Vibriert nicht" hat mindestens vier Ursachen, und keine davon ist am Bildschirm
+zu erkennen: keine Schnittstelle, abgelehnter Aufruf, Systemeinstellung aus,
+Lautlos-Modus. Deshalb sagt der Schalter beim Einschalten, was daraus wurde —
+`navigator.vibrate` liefert zurück, ob der Aufruf angenommen wurde:
+
+- keine Schnittstelle → „dieser Browser stellt keine bereit (auf dem iPhone ist
+  das so)"
+- Aufruf abgelehnt → „der Browser hat sie abgelehnt" plus Hinweis auf
+  Lautlos-Modus und Systemeinstellung
+- angenommen → „Vibration an." und man spürt es einmal
+
+Unter dem Schalter steht dauerhaft der Hinweis, wo am Gerät nachzusehen ist.
 
 ## Beim Gewinnen
 
@@ -407,7 +436,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.1`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.2`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 
