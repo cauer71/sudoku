@@ -10,13 +10,13 @@
  *   - Alles andere (Icons, Manifest): erst Cache, dann Netz.
  */
 
-var VERSION = 'sudoku-1.9';        // dieselbe Nummer wie APP_VERSION in index.html
+var VERSION = 'sudoku-2.0';        // dieselbe Nummer wie APP_VERSION in index.html
 
 // Icons werden mit "immutable" und einem Jahr Haltbarkeit ausgeliefert. Damit
 // eine neue Zeichnung überhaupt ankommt, tragen ihre Adressen die Fassung:
 // gleiche Datei, neue Adresse, also ein neuer Eintrag im Cache des Browsers.
 // Diese Marke muss zu APP_VERSION passen — tools/collect.mjs prüft das.
-var ICON_V = '?v=1.9';
+var ICON_V = '?v=2.0';
 
 var ICONS = [
   'icon-192.png',

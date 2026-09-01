@@ -106,41 +106,42 @@ folgt zur Laufzeit dem Papiergrund, also hell/dunkel und dem Julia-Modus.
 
 ### Das Icon
 
-Neun weiße Felder mit Abstand auf farbigem Grund, drei Ziffern darin, ein Feld
-hervorgehoben wie die gewählte Zelle im Spiel.
+Ein Sudoku-Brett: vollständiger 3×3-Block, ein Feld noch frei (die 2 fehlt),
+dünne Gitterlinien, kein Rahmen. Die Ziffern tragen **zwei Tinten, dieselben wie
+im Spiel** — schwarz für Vorgaben, die Markenfarbe für eigene Zahlen. Das Icon
+zeigt damit dasselbe wie das Brett: ein Rätsel im Gange, nicht ein Symbol dafür.
 
-**Die Farbe liegt in den Fugen, nicht in einem Rahmen.** Ein Rahmen kostet
-Fläche, die den Ziffern fehlt; die Fugen tragen dieselbe Farbe über das ganze
-Icon und lassen die Ziffern so groß werden, wie sie eben werden können. Außen
-bleibt nur ein Hauch Rand (2,5 %), damit die Ecken beim Abrunden durch das
-Betriebssystem nicht weiß angeschnitten werden.
+**Ziffern** sind das, woran man Sudoku erkennt; ein leeres Gitter sieht wie eine
+Tabelle aus. Deshalb bleiben sie in jeder Größe drin — bei 16 px sind sie nicht
+mehr zu lesen, aber als Ziffernform noch zu sehen, und das ist mehr, als ein
+leeres Gitter dort hergibt. Das freie Feld liegt in der Ecke, nicht in der
+Mitte: unsymmetrisch sieht es nach Rätsel aus, symmetrisch nach Muster.
 
-**Ziffern in einem Gitter** sind das, woran man Sudoku erkennt; ein leeres
-Gitter sieht wie eine Tabelle aus. Deshalb bleiben sie in jeder Größe drin — bei
-16 px sind sie nicht mehr zu lesen, aber als Ziffernform noch zu sehen, und das
-ist mehr, als ein leeres Gitter dort hergibt.
-
-5 · 3 · 7 stehen so, dass keine Ziffer zweimal in Zeile, Spalte oder Block
-vorkommt: der Ausschnitt könnte aus einem echten Rätsel stammen. Ihre Lage ist
-bewusst unsymmetrisch, sonst sieht es nach Muster aus statt nach Rätsel.
-
-Maße als Anteil der Kantenlänge: Rand 2,5 %, Fuge 8 %, Schriftgröße 128 % der
-Feldbreite — die Ziffer nimmt damit 92 % der Feldhöhe ein. Dazu eine gemessene
+Maße als Anteil der Kantenlänge: Abstand des Gitters zum Rand 6 %,
+Linienstärke 1 %, Schriftgröße 92 % der Feldbreite. Dazu eine gemessene
 Korrektur: `dominant-baseline: central` setzt die Ziffer in dieser Schrift 4,3 %
-zu hoch, was bei 92 % Höhe sofort auffällt, weil sie oben anstößt.
+der Feldhöhe zu hoch.
 
-Die beiden Fassungen sind an den Fugen zu unterscheiden. Blau ist `--primary`
-der App. Rosé ist derselbe Farbton wie die tertiary-Rolle, aber heller und
-satter (`#b981b5`): die Rolle selbst (`#725572`) liest sich bei 64 px als
-dunkles Mauve, und dann ist nicht zu sehen, dass es das rosa Icon ist. Die
-Oberfläche im Julia-Modus behält die Werte der Vorlage unverändert; nur der
-Icon-Grund ist aufgehellt, weil er eine andere Aufgabe hat.
+Die beiden Fassungen unterscheiden sich an der **Tinte der eigenen Zahlen** und
+an einer leichten Tönung des Grundes. Ein farbiger Rahmen wäre deutlicher,
+kostet aber die Fläche, welche die Ziffern brauchen — und genau das war an den
+Vorgängern das Störende. Blau ist `--primary` der App auf weißem Grund. Rosé
+liegt im Farbton der tertiary-Rolle, aber satter (`#a3418f` statt `#725572`):
+die Rolle selbst liest sich bei 44 px als dunkles Grau-Mauve, und dann ist nicht
+zu sehen, dass es das rosa Icon ist. Die Oberfläche im Julia-Modus behält die
+Werte der Vorlage unverändert; nur das Icon ist aufgehellt, weil es eine andere
+Aufgabe hat.
+
+Geprüft wird der Unterschied nicht an einer festen Bildstelle, sondern als
+Mittel über alle **farbigen** Bildpunkte: weiß, grau und schwarz fallen heraus,
+übrig bleibt die Tinte. Gemessen liegen die beiden 126 auseinander (blau
+47/96/178, rosé 165/68/145).
 
 Größen: 192, 512 (`any`), 512 (`maskable`), 180 für iOS, dazu 32 und 16 als
-Favicon. Beim maskable-Icon füllt das Motiv nicht das Icon, sondern nur die
-mittleren 56 % — Android beschneidet es auf einen Kreis, und das größte Quadrat
-darin hat die Kante 0,8/√2. Erzeugt mit `node tools/make-icons.mjs` (braucht
-Playwright, nur zum Erzeugen).
+Favicon. Beim maskable-Icon füllt das Brett nicht das Icon, sondern liegt
+kleiner (56 %) auf farbigem Grund — Android beschneidet es auf einen Kreis, und
+das größte Quadrat darin hat die Kante 0,8/√2; Ziffern in den Ecken wären weg.
+Erzeugt mit `node tools/make-icons.mjs` (braucht Playwright, nur zum Erzeugen).
 
 Die Adressen der Icons tragen die Fassungsnummer als `?v=…`. Cloudflare liefert
 `/icons/*` mit `immutable` und einem Jahr Haltbarkeit aus — eine neue Zeichnung
@@ -387,7 +388,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-1.9`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.0`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 
