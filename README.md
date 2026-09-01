@@ -106,26 +106,41 @@ folgt zur Laufzeit dem Papiergrund, also hell/dunkel und dem Julia-Modus.
 
 ### Das Icon
 
-Ein 3×3-Block auf farbigem Grund, drei Ziffern darin, eine Zelle hervorgehoben
-wie die gewählte Zelle im Spiel. **Ziffern in einem Gitter** sind das, woran man
-Sudoku erkennt; ein leeres Gitter sieht wie eine Tabelle aus. Deshalb bleiben
-sie in jeder Größe drin — bei 16 px sind sie nicht mehr zu lesen, aber als
-Ziffernform noch zu sehen, und das ist mehr, als ein leeres Gitter dort hergibt.
+Neun weiße Felder mit Abstand auf farbigem Grund, drei Ziffern darin, ein Feld
+hervorgehoben wie die gewählte Zelle im Spiel.
+
+**Die Farbe liegt in den Fugen, nicht in einem Rahmen.** Ein Rahmen kostet
+Fläche, die den Ziffern fehlt; die Fugen tragen dieselbe Farbe über das ganze
+Icon und lassen die Ziffern so groß werden, wie sie eben werden können. Außen
+bleibt nur ein Hauch Rand (2,5 %), damit die Ecken beim Abrunden durch das
+Betriebssystem nicht weiß angeschnitten werden.
+
+**Ziffern in einem Gitter** sind das, woran man Sudoku erkennt; ein leeres
+Gitter sieht wie eine Tabelle aus. Deshalb bleiben sie in jeder Größe drin — bei
+16 px sind sie nicht mehr zu lesen, aber als Ziffernform noch zu sehen, und das
+ist mehr, als ein leeres Gitter dort hergibt.
 
 5 · 3 · 7 stehen so, dass keine Ziffer zweimal in Zeile, Spalte oder Block
 vorkommt: der Ausschnitt könnte aus einem echten Rätsel stammen. Ihre Lage ist
 bewusst unsymmetrisch, sonst sieht es nach Muster aus statt nach Rätsel.
 
-Der farbige Rand trägt die Unterscheidung der beiden Fassungen. Blau ist
-`--primary` der App. Rosé ist derselbe Farbton wie die tertiary-Rolle, aber
-heller und satter (`#b981b5`): die Rolle selbst (`#725572`) liest sich bei 64 px
-als dunkles Mauve, und dann ist nicht zu sehen, dass es das rosa Icon ist. Die
+Maße als Anteil der Kantenlänge: Rand 2,5 %, Fuge 8 %, Schriftgröße 128 % der
+Feldbreite — die Ziffer nimmt damit 92 % der Feldhöhe ein. Dazu eine gemessene
+Korrektur: `dominant-baseline: central` setzt die Ziffer in dieser Schrift 4,3 %
+zu hoch, was bei 92 % Höhe sofort auffällt, weil sie oben anstößt.
+
+Die beiden Fassungen sind an den Fugen zu unterscheiden. Blau ist `--primary`
+der App. Rosé ist derselbe Farbton wie die tertiary-Rolle, aber heller und
+satter (`#b981b5`): die Rolle selbst (`#725572`) liest sich bei 64 px als
+dunkles Mauve, und dann ist nicht zu sehen, dass es das rosa Icon ist. Die
 Oberfläche im Julia-Modus behält die Werte der Vorlage unverändert; nur der
 Icon-Grund ist aufgehellt, weil er eine andere Aufgabe hat.
 
-Größen: 192, 512 (`any`), 512 (`maskable`, Inhalt innerhalb der mittleren 80 %
-für die Adaptivformen von Android), 180 für iOS, dazu 32 und 16 als Favicon.
-Erzeugt mit `node tools/make-icons.mjs` (braucht Playwright, nur zum Erzeugen).
+Größen: 192, 512 (`any`), 512 (`maskable`), 180 für iOS, dazu 32 und 16 als
+Favicon. Beim maskable-Icon füllt das Motiv nicht das Icon, sondern nur die
+mittleren 56 % — Android beschneidet es auf einen Kreis, und das größte Quadrat
+darin hat die Kante 0,8/√2. Erzeugt mit `node tools/make-icons.mjs` (braucht
+Playwright, nur zum Erzeugen).
 
 Die Adressen der Icons tragen die Fassungsnummer als `?v=…`. Cloudflare liefert
 `/icons/*` mit `immutable` und einem Jahr Haltbarkeit aus — eine neue Zeichnung
@@ -372,7 +387,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-1.8`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-1.9`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 
