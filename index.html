@@ -432,6 +432,13 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   z-index: 3;
 }
 
+/* Falsch gesetzt und weiterhin gewählt: beide Rahmen zeigen. Außen rot,
+   damit der Fehler führt, innen der Auswahlrahmen — man sieht, dass die Zahl
+   sich direkt berichtigen lässt, ohne das Feld erneut anzutippen. */
+.cell.sel.wrong::after {
+  box-shadow: inset 0 0 0 2px var(--error), inset 0 0 0 4px var(--primary);
+}
+
 /* Eine Sekunde lang aufblitzen — drei Schläge, danach bleibt der Rahmen. */
 @keyframes errBlink {
   0%   { box-shadow: inset 0 0 0 3px var(--error); background: var(--error-flash); }
@@ -2292,7 +2299,8 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 
   /* ----------------------------------------------------------
      Ziffernleiste
-       kurz tippen  → Zahl eintragen, danach Feld abwählen
+       kurz tippen  → Zahl eintragen; richtig: Feld abwählen,
+                       falsch: gewählt lassen zum Berichtigen
        lang drücken → Notiz (wie Umschalt auf der Tastatur)
        ohne gewähltes Feld → nur hervorheben
      ---------------------------------------------------------- */
@@ -2324,7 +2332,14 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 
     buzz("value");
     placeValue(i, n);
-    if (board[i]) deselect(board[i]);   // gesetzt: abwählen und hervorheben
+    if (board[i] && !wrong[i]) {
+      deselect(board[i]);              // richtig: abwählen und hervorheben
+    } else {
+      // Falsch gesetzt — oder wieder gelöscht: das Feld bleibt gewählt, damit
+      // die Zahl sich gleich berichtigen lässt, ohne das rote Feld erst
+      // wieder anzutippen.
+      cells[i].focus({ preventScroll: true });
+    }
   }
 
   function padStart(el) {

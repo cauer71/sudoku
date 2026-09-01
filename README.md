@@ -193,12 +193,20 @@ blieben, sobald man den Grad gewechselt hatte.
 
 | Bedienung | Wirkung |
 |---|---|
-| kurz tippen, Feld gewählt | Zahl eintragen — **danach wird das Feld abgewählt** |
+| kurz tippen, Feld gewählt, Zahl **richtig** | Zahl eintragen — **danach wird das Feld abgewählt** und die Ziffer hervorgehoben |
+| kurz tippen, Feld gewählt, Zahl **falsch** | Zahl eintragen — **das Feld bleibt gewählt** |
 | lang drücken (0,45 s) | Notiz setzen, ohne den Modus zu wechseln; das Feld bleibt gewählt |
 | tippen, kein Feld gewählt | alle Vorkommen dieser Ziffer hervorheben (nochmal tippen hebt es auf) |
 
 Die Abwahl nach dem Eintragen ist der Kern: Vorher überschrieb ein Tipp auf eine
 andere Ziffer das gerade gefüllte Feld, obwohl man nur hervorheben wollte.
+
+Nach einer **falschen** Zahl wäre dieselbe Abwahl aber im Weg — man müsste das
+rote Feld erst wieder antippen, um zu berichtigen. Es bleibt daher gewählt: ein
+Tipp auf eine andere Ziffer ersetzt die falsche Zahl, ein Tipp auf dieselbe
+löscht sie. Die Zelle zeigt dann beide Rahmen, außen den roten Fehlerrahmen,
+innen den Auswahlrahmen. Ist die Fehlerprüfung abgeschaltet, gibt es kein
+„falsch" — dann wird wie bisher immer abgewählt.
 
 Auf der **Tastatur** bleibt das Feld nach dem Eintragen gewählt — sonst wäre das
 Weiterwandern mit den Pfeiltasten unterbrochen. Ohne Auswahl hebt eine Ziffer
@@ -255,7 +263,7 @@ Zwei Rollen, klar getrennt:
 
 | | Darstellung |
 |---|---|
-| **die falsch gesetzte Zahl** — weicht von der Lösung ab | rote Ziffer, roter Rahmen, blitzt eine Sekunde lang dreimal auf; der Rahmen bleibt bis zur Berichtigung |
+| **die falsch gesetzte Zahl** — weicht von der Lösung ab | rote Ziffer, roter Rahmen, blitzt eine Sekunde lang dreimal auf; der Rahmen bleibt bis zur Berichtigung, und das Feld bleibt gewählt |
 | **die Ursachen** — dieselbe Zahl steht schon in Zeile, Spalte oder Block | rot hinterlegt, Ziffer in normaler Schriftfarbe; bleibt bis der Fehler behoben ist |
 
 Die Zuordnung ist eindeutig: von zwei gleichen Zahlen in einer Einheit kann nur
@@ -308,5 +316,6 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 | `sw.js` | Service Worker: Seitenaufrufe erst Netz dann Cache, übrige Dateien erst Cache dann Netz |
 | `icons/` | sechs PNG-Größen für iOS, Android und Favicon |
 
-`Sudoku Webapp Redesign.zip` ist die Design-Vorlage, aus der diese Fassung
-entstanden ist.
+Die Design-Vorlage *Sudoku Webapp Redesign*, aus der diese Fassung entstanden
+ist, liegt nicht im Repository — ihre Farb- und Formwerte stehen vollständig im
+`<style>`-Block von `index.html`.
