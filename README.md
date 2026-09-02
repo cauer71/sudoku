@@ -391,10 +391,9 @@ rosé; Rot ist bewusst nicht dabei, weil es im Spiel „Fehler" bedeutet. Bei
 ## Spiel
 
 - **Rätselerzeugung im Browser.** Ein zufälliges vollständiges Gitter wird per
-  Backtracking gefüllt; anschließend werden einzeln so lange Zahlen entfernt,
-  wie die Lösung nachweislich eindeutig bleibt (Lösungszähler mit Abbruch bei
-  zwei Treffern, Kandidatenauswahl nach kleinster Restmenge). Ohne
-  Symmetrievorgabe, damit das Vorgabenmuster keine erkennbare Struktur hat.
+  Backtracking gefüllt; anschließend werden so lange Zahlen entfernt, wie die
+  Lösung nachweislich eindeutig bleibt (Lösungszähler mit Abbruch bei zwei
+  Treffern, Kandidatenauswahl nach kleinster Restmenge).
 - **Vier Schwierigkeitsgrade**, eingestuft über die tatsächlich nötige
   Lösetechnik, nicht nur über die Anzahl der Vorgaben:
 
@@ -412,6 +411,34 @@ rosé; Rot ist bewusst nicht dabei, weil es im Spiel „Fehler" bedeutet. Bei
 - **Tastatur** vollständig: Pfeiltasten, 1–9, Umschalt+Ziffer für Notizen,
   0/⌫, N, H, Strg+Z, Leertaste, Esc
 - **Spielstand** wird lokal gesichert und beim nächsten Aufruf fortgesetzt
+
+## Symmetrisches Muster
+
+Standardmäßig **punktsymmetrisch**, abschaltbar in den Einstellungen. Mit jedem
+Feld fällt auch das um 180° gedrehte Gegenstück: oben links mit unten rechts,
+oben rechts mit unten links. So sind Rätsel in Heften gesetzt. Die Mitte ist ihr
+eigenes Gegenstück und fällt allein.
+
+Ausdrücklich **nicht** vierfach symmetrisch — nicht zusätzlich waagrecht und
+senkrecht gespiegelt. Das war der Wunsch: „nicht alle vier, sondern so übers
+Eck." Ein zufälliges punktsymmetrisches Muster ist von sich aus nicht auch
+gespiegelt; die `symmetrie`-Prüfung misst beides und verlangt genau diese
+Kombination.
+
+Beide Felder eines Paares werden zugleich geleert und die Eindeutigkeit erst
+danach geprüft. Einzeln geprüft könnte das erste durchgehen und das zweite
+scheitern — dann wäre die Symmetrie wieder gebrochen.
+
+**Was das kostet.** Paarweises Entfernen schränkt stärker ein, also bleiben
+symmetrische Rätsel eher etwas über der Zielzahl an Vorgaben; Experte landet bei
+etwa 27 bis 31 statt 25. Die Eindeutigkeit leidet nie darunter, und die
+Technik-Schranke hält auch: die Prüfung rechnet für jeden der vier Grade mit
+einem eigenständig nachgebauten Einer-Löser nach, dass die Bedingung aus der
+Tabelle oben zutrifft — ein „Experte" mit 29 Vorgaben ist also weiterhin nicht
+mit Einer-Techniken zu lösen.
+
+Der Schalter wirkt **ab dem nächsten Rätsel**; das laufende bleibt unberührt.
+Wie alle Einstellungen liegt er im lokalen Speicher des Geräts.
 
 ## Fehleranzeige
 
@@ -467,7 +494,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.4`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.5`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 

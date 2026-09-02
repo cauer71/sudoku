@@ -13,9 +13,9 @@
      angemeldet. -->
 <meta name="theme-color" content="#dfe4ee">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.4">
-<link rel="icon" href="icons/favicon-32.png?v=2.4" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png?v=2.4" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.5">
+<link rel="icon" href="icons/favicon-32.png?v=2.5" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=2.5" sizes="16x16" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1060,6 +1060,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         <label class="switch-row"><span>Falsche Eingaben sofort markieren</span><input type="checkbox" id="setCheck" checked><span class="track"></span></label>
         <label class="switch-row"><span>Notizen automatisch bereinigen</span><input type="checkbox" id="setClean" checked><span class="track"></span></label>
         <label class="switch-row"><span>Gleiche Zahlen hervorheben</span><input type="checkbox" id="setSame" checked><span class="track"></span></label>
+        <label class="switch-row"><span>Symmetrisches Muster <span class="switch-hint">wie im Rätselheft</span></span><input type="checkbox" id="setSym" checked><span class="track"></span></label>
         <label class="switch-row"><span>Julia-Modus <span class="switch-hint">rosa Farben</span></span><input type="checkbox" id="setJulia"><span class="track"></span></label>
         <label class="switch-row"><span>Vibration <span class="switch-hint">beim Tippen</span></span><input type="checkbox" id="setHaptik" checked><span class="track"></span></label>
         <button class="btn-text" id="btnHaptik" type="button">Vibration testen</button>
@@ -1127,7 +1128,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      dasselbe wie der Cache.
      ========================================================== */
 
-  var APP_VERSION = "2.4";
+  var APP_VERSION = "2.5";
   $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
@@ -1380,9 +1381,27 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     experte: { label: "Experte", clues: 25, passes: 2, accept: function (p) { return !solvableBySingles(p, true); } }
   };
 
-  // Zahlen werden einzeln in zufälliger Reihenfolge entfernt — bewusst ohne
-  // Symmetrievorgabe, damit das Vorgabenmuster keine erkennbare Struktur hat.
-  function carve(sol, cfg) {
+  /**
+   * Zahlen aus dem vollen Gitter entfernen, bis der Grad erreicht ist.
+   *
+   * `symmetrisch` heißt punktsymmetrisch: mit jedem Feld i fällt auch 80 − i,
+   * also das um 180° gedrehte Gegenstück — oben links mit unten rechts, oben
+   * rechts mit unten links. So sind Rätsel in Heften gesetzt. Die Mitte (40)
+   * ist ihr eigenes Gegenstück und fällt allein.
+   *
+   * Beide Felder eines Paares werden zugleich geleert und die Eindeutigkeit
+   * erst danach geprüft. Einzeln geprüft könnte das erste durchgehen und das
+   * zweite scheitern — dann wäre die Symmetrie wieder gebrochen.
+   *
+   * Ohne Symmetrie fällt jedes Feld für sich; das Muster hat dann keine
+   * erkennbare Struktur. Beides ist Geschmackssache, daher der Schalter.
+   *
+   * Die Vorgabenzahl kann bei Symmetrie um eins unter dem Ziel landen, weil sie
+   * in Zweierschritten sinkt. Und weil paarweise Entfernen stärker einschränkt,
+   * bleiben symmetrische Rätsel eher etwas über dem Ziel — die Eindeutigkeit
+   * geht dabei nie verloren, nur der Grad wird milder.
+   */
+  function carve(sol, cfg, symmetrisch) {
     var puz = sol.slice();
     var clues = 81;
     for (var pass = 0; pass < cfg.passes; pass++) {
@@ -1391,10 +1410,17 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         if (clues <= cfg.clues) break;
         var i = order[k];
         if (puz[i] === 0) continue;
-        var saved = puz[i];
-        puz[i] = 0;
-        if (countSolutions(puz, 2) !== 1) puz[i] = saved;
-        else clues--;
+
+        var gegen = 80 - i;
+        var paar = (symmetrisch && gegen !== i && puz[gegen] !== 0) ? [i, gegen] : [i];
+        var sicher = [];
+        for (var n = 0; n < paar.length; n++) { sicher.push(puz[paar[n]]); puz[paar[n]] = 0; }
+
+        if (countSolutions(puz, 2) !== 1) {
+          for (var m = 0; m < paar.length; m++) puz[paar[m]] = sicher[m];
+        } else {
+          clues -= paar.length;
+        }
       }
     }
     return puz;
@@ -1402,11 +1428,12 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 
   function makePuzzle(diff) {
     var cfg = DIFFS[diff];
+    var sym = !!settings.sym;
     var deadline = performance.now() + 2600;
     var fallback = null;
     for (var attempt = 0; attempt < 18; attempt++) {
       var sol = fullGrid();
-      var puz = carve(sol, cfg);
+      var puz = carve(sol, cfg, sym);
       if (!fallback) fallback = { sol: sol, puz: puz };
       if (cfg.accept(puz)) return { sol: sol, puz: puz };
       if (performance.now() > deadline) break;
@@ -1438,7 +1465,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   var notesMode = false;
   var best = {};
   var playerName = "";        // leer = nicht in die Rangliste eintragen
-  var settings = { check: true, clean: true, same: true, julia: false, haptik: true };
+  var settings = { check: true, clean: true, same: true, sym: true, julia: false, haptik: true };
 
   // Zelle, die gerade eine Sekunde lang rot aufblitzt (-1 = keine)
   var blinkIndex = -1, blinkTimer = null;
@@ -1645,7 +1672,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       var s = localStorage.getItem(STORE + ".settings");
       if (s) {
         var p = JSON.parse(s) || {};
-        ["check", "clean", "same", "julia", "haptik"].forEach(function (k) {
+        ["check", "clean", "same", "sym", "julia", "haptik"].forEach(function (k) {
           if (typeof p[k] === "boolean") settings[k] = p[k];
         });
       }
@@ -2767,6 +2794,12 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   });
   bindSwitch("#setClean", "clean");
   bindSwitch("#setSame", "same");
+  bindSwitch("#setSym", "sym", function () {
+    // Das laufende Rätsel bleibt, wie es ist — der Schalter wirkt beim nächsten.
+    say(settings.sym
+      ? "Symmetrisches Muster an — gilt ab dem nächsten Rätsel."
+      : "Symmetrisches Muster aus — gilt ab dem nächsten Rätsel.");
+  });
   bindSwitch("#setJulia", "julia", function () {
     applyMode();
     installState();                      // Hinweis auf die Icon-Farbe mitziehen
