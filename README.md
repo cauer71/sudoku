@@ -272,7 +272,7 @@ Fassung auf einem Gerät gerade läuft.
 | Bedienung | Wirkung |
 |---|---|
 | kurz tippen, gewähltes Feld **leer** | Zahl eintragen; richtig → Feld abwählen und die Ziffer hervorheben, falsch → Feld bleibt gewählt |
-| kurz tippen, gewähltes Feld **fertig** | nichts eintragen, sondern **alle Vorkommen dieser Ziffer hervorheben** |
+| kurz tippen, gewähltes Feld **fertig** | nichts eintragen, sondern **alle Vorkommen dieser Ziffer hervorheben** — und das Feld abwählen |
 | kurz tippen, gewähltes Feld **falsch** | Zahl ersetzen; dieselbe Ziffer nochmal löscht sie |
 | lang drücken (0,45 s) | Notiz setzen, ohne den Modus zu wechseln; das Feld bleibt gewählt |
 | tippen, kein Feld gewählt | alle Vorkommen dieser Ziffer hervorheben |
@@ -280,6 +280,13 @@ Fassung auf einem Gerät gerade läuft.
 Nochmal dieselbe Ziffer schaltet eine Hervorhebung wieder aus. Die Taste der
 hervorgehobenen Ziffer trägt einen Ring, damit zu sehen ist, welche gerade aktiv
 ist.
+
+**Beim Hervorheben fällt die Auswahl weg.** Zuerst blieb das Feld gewählt — dann
+liegen aber sein Rahmen und die Schattierung seiner Zeile, Spalte und seines
+Blocks über der Hervorhebung, und man sieht nicht mehr, worum es geht: zwei
+Auskünfte auf einmal, von denen man nur eine wollte. Hervorheben heißt jetzt:
+nur diese Ziffer, sonst nichts. Die Pfeiltasten stören sich daran nicht — ohne
+Auswahl greift `move()` auf die letzte Position zurück.
 
 **Fertig** heißt: die Zahl steht nicht mehr zur Debatte — eine Vorgabe, ein
 aufgedeckter Tipp oder eine Zahl, welche die Fehlerprüfung als richtig kennt.
@@ -460,7 +467,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.3`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.4`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 

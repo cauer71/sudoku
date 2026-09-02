@@ -13,9 +13,9 @@
      angemeldet. -->
 <meta name="theme-color" content="#dfe4ee">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.3">
-<link rel="icon" href="icons/favicon-32.png?v=2.3" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png?v=2.3" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.4">
+<link rel="icon" href="icons/favicon-32.png?v=2.4" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=2.4" sizes="16x16" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1127,7 +1127,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      dasselbe wie der Cache.
      ========================================================== */
 
-  var APP_VERSION = "2.3";
+  var APP_VERSION = "2.4";
   $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
@@ -1812,9 +1812,19 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   }
 
   /* Alle Vorkommen einer Ziffer hervorheben. Nochmal dieselbe schaltet es aus.
-     Das gewählte Feld bleibt gewählt — die Hervorhebung legt sich darüber. */
+
+     Die Auswahl fällt dabei weg. Erst blieb das Feld gewählt — dann liegen aber
+     sein Rahmen und die Schattierung seiner Zeile, Spalte und seines Blocks über
+     der Hervorhebung, und man sieht nicht mehr, worum es geht: zwei Auskünfte
+     auf einmal, von denen man nur eine wollte. Hervorheben heißt jetzt: nur
+     diese Ziffer, sonst nichts.
+
+     Die Pfeiltasten stören sich daran nicht — ohne Auswahl greift move() auf die
+     letzte Position zurück. */
   function markDigit(n) {
-    highlightDigit = (highlightDigit === n) ? 0 : n;
+    var aus = (highlightDigit === n);
+    selected = -1;
+    highlightDigit = aus ? 0 : n;
     render();
     say(highlightDigit ? ("Alle " + n + " hervorgehoben.") : "Hervorhebung aus.");
   }
