@@ -157,10 +157,33 @@ bleibt die Tinte. Gemessen liegen die beiden 124 auseinander (blau 49/97/178,
 rosé 165/69/146).
 
 Größen: 192, 512 (`any`), 512 (`maskable`), 180 für iOS, dazu 32 und 16 als
-Favicon. Beim maskable-Icon füllt das Brett nicht das Icon, sondern liegt
-kleiner (56 %) auf farbigem Grund — Android beschneidet es auf einen Kreis, und
-das größte Quadrat darin hat die Kante 0,8/√2; Ziffern in den Ecken wären weg.
-Erzeugt mit `node tools/make-icons.mjs` (braucht Playwright, nur zum Erzeugen).
+Favicon. Erzeugt mit `node tools/make-icons.mjs` (braucht Playwright, nur zum
+Erzeugen).
+
+#### maskable: „mittlere 80 %" heißt nicht, das Bild zu schrumpfen
+
+Android beschneidet das maskable-Icon auf eine eigene Form, im schlimmsten Fall
+einen Kreis über die mittleren 80 %. Ich hatte das erst gelesen als „das ganze
+Quadrat muss in den Kreis passen" und das Brett auf 56 % verkleinert, den Rest
+mit der Markenfarbe gefüllt. Ergebnis: der breite farbige Ring, den Android beim
+Installieren zeigte — und der gefiel niemandem.
+
+Verlangt ist nur, dass **nichts Wichtiges beschnitten** wird. Der Grund darf bis
+an die Kante laufen; allein die Tinte muss im Kreis liegen. maskable und
+normales Icon unterscheiden sich deshalb nur noch im Abstand des Gitters zur
+Kante: 18 % statt 7 %.
+
+Maßgeblich ist die Ecke der äußeren Ziffer — waagrecht 0,247 der Zelle (halbe
+Ziffernbreite), senkrecht 0,16 (halbe Ziffernhöhe). Der Rechnung wird aber nicht
+geglaubt: die `maskable`-Prüfung tastet die fertigen PNG ab und misst, wie weit
+die äußerste Farbabweichung vom Grund von der Mitte entfernt liegt.
+
+| gemessen | |
+|---|---|
+| maskable | weiteste Tinte bei 0,386 — erlaubt sind 0,400 |
+| | und mindestens 0,33, damit das Motiv den Kreis auch nutzt |
+| normal | 0,518 — die werden nicht beschnitten und dürfen mehr füllen |
+| beide | Grund an allen Kanten gleich der Feldfarbe, also kein Ring |
 
 Die Adressen der Icons tragen die Fassungsnummer als `?v=…`. Cloudflare liefert
 `/icons/*` mit `immutable` und einem Jahr Haltbarkeit aus — eine neue Zeichnung
@@ -392,6 +415,20 @@ Gitter. Die Farben kommen aus der laufenden Palette, im Julia-Modus ist es also
 rosé; Rot ist bewusst nicht dabei, weil es im Spiel „Fehler" bedeutet. Bei
 `prefers-reduced-motion` entfällt beides.
 
+Zweiundzwanzighundert Millisekunden lang steigen Raketen, danach fallen die
+letzten Teilchen aus — insgesamt rund 2,9 s. Aufgeräumt wird an einer Stelle,
+und mit einer **Reißleine**: die Schleife läuft über `requestAnimationFrame`,
+und der hält an, sobald die Seite nicht mehr sichtbar ist. Wechselt man mitten im
+Feuerwerk die App, bliebe die Leinwand beim Zurückkommen über dem Brett liegen —
+sie fängt keine Klicks ab, verdeckt aber. Ein `setTimeout` räumt dann auf; es
+läuft auch im Hintergrund. Wer zuerst fertig ist, gewinnt.
+
+Aufgefallen ist das durch eine Prüfung, die gelegentlich kippte. Zwei Ursachen
+steckten darin: die Prüfung wartete mit 2600 ms zu kurz (das ist behoben), und
+der Aufräumweg hing wirklich allein am Animationstakt (das ist die Reißleine).
+Die Prüfung schaltet `requestAnimationFrame` jetzt ausdrücklich ab und verlangt,
+dass die Leinwand trotzdem verschwindet.
+
 ## Spiel
 
 - **Rätselerzeugung im Browser.** Ein zufälliges vollständiges Gitter wird per
@@ -498,7 +535,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.6`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.7`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 

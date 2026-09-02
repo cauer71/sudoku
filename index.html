@@ -13,9 +13,9 @@
      angemeldet. -->
 <meta name="theme-color" content="#dfe4ee">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.6">
-<link rel="icon" href="icons/favicon-32.png?v=2.6" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png?v=2.6" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.7">
+<link rel="icon" href="icons/favicon-32.png?v=2.7" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=2.7" sizes="16x16" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1127,7 +1127,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      dasselbe wie der Cache.
      ========================================================== */
 
-  var APP_VERSION = "2.6";
+  var APP_VERSION = "2.7";
   $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
@@ -2077,6 +2077,8 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      ========================================================== */
 
   var fxRunning = false;
+
+  var fxSafety = null;          // Reißleine, falls rAF im Hintergrund anhält
   function fireworks(duration) {
     if (fxRunning) return;
     var ctx = fxEl.getContext && fxEl.getContext("2d");
@@ -2152,11 +2154,27 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
       if (el < duration || parts.length) {
         requestAnimationFrame(frame);
       } else {
-        ctx.clearRect(0, 0, fxEl.width, fxEl.height);
-        fxEl.style.display = "none";
-        fxRunning = false;
+        aufraeumen();
       }
     }
+
+    /* Aufräumen an einer Stelle, und mit einer Reißleine.
+       requestAnimationFrame läuft nur, solange die Seite sichtbar ist. Wechselt
+       man mitten im Feuerwerk die App, hält die Schleife an, und die Leinwand
+       bliebe beim Zurückkommen über dem Brett liegen — sie fängt keine Klicks
+       ab, verdeckt aber. Der Zeitgeber räumt in diesem Fall auf; er läuft auch
+       im Hintergrund. Wer zuerst fertig ist, gewinnt. */
+    function aufraeumen() {
+      if (!fxRunning) return;
+      if (fxSafety) { clearTimeout(fxSafety); fxSafety = null; }
+      ctx.clearRect(0, 0, fxEl.width, fxEl.height);
+      fxEl.style.display = "none";
+      fxRunning = false;
+    }
+
+    if (fxSafety) clearTimeout(fxSafety);
+    fxSafety = setTimeout(aufraeumen, duration + 1200);
+
     requestAnimationFrame(frame);
   }
 

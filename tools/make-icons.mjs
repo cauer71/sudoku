@@ -44,9 +44,9 @@ const OUT = join(resolve(dirname(fileURLToPath(import.meta.url)), '..'), 'icons'
 mkdirSync(OUT, { recursive: true });
 
 const THEMES = {
-  //         Grund (Felder)  Gitterlinie  eigene Zahl  Grund außen (nur maskable)
-  normal: { paper: '#e3e2e9', line: '#757780', own: '#2b5db0', outer: '#2b5db0' },
-  julia:  { paper: '#ecdcea', line: '#8a7688', own: '#a3418f', outer: '#b981b5' }
+  //         Grund (Felder)  Gitterlinie  eigene Zahl
+  normal: { paper: '#e3e2e9', line: '#757780', own: '#2b5db0' },
+  julia:  { paper: '#ecdcea', line: '#8a7688', own: '#a3418f' }
 };
 const INK = '#1a1b20';                 // Vorgaben, wie --on-surface im Spiel
 const FONT = 'FreeSans, DejaVu Sans, Helvetica, sans-serif';
@@ -64,6 +64,23 @@ const DIGITS = [
 ];
 
 const PAD = 0.07;         // Abstand des Gitters zur Kante, Anteil der Kantenlänge
+
+/**
+ * Für maskable ein größerer Abstand — und sonst nichts.
+ *
+ * Erst lag dort das ganze Brett auf 56 % verkleinert auf farbigem Grund, weil
+ * „Inhalt in den mittleren 80 %" als „das Quadrat muss in den Kreis passen"
+ * gelesen war. Das ergab den breiten blauen Ring, den Android beim Installieren
+ * zeigt. Verlangt ist aber nur, dass nichts Wichtiges beschnitten wird: der
+ * Grund darf bis an die Kante laufen, allein die Tinte muss im Kreis liegen.
+ *
+ * Maßgeblich ist die Ecke der äußeren Ziffer. Sie sitzt bei 0,247 der Zelle
+ * waagrecht (halbe Ziffernbreite) und 0,16 senkrecht (halbe Ziffernhöhe); mit
+ * 0,18 Rand liegt sie 0,391 von der Mitte, der sichere Radius ist 0,4. Die
+ * icons-Prüfung rechnet das am fertigen Bild nach, statt dieser Rechnung zu
+ * glauben.
+ */
+const PAD_MASKABLE = 0.18;
 const LINE = 0.0075;      // Linienstärke
 const SIZE = 0.92;        // Schriftgröße, Anteil der Feldbreite → Ziffer ~68 % hoch
 
@@ -80,35 +97,23 @@ const BASELINE = 0.043;
 const weightFor = size => (size <= 32 ? 700 : 400);
 
 /**
- * `span` ist die Kantenlänge des Bretts, gemessen an der Icon-Kante. Normal
- * füllt es das Icon (1) — der Grund des Bretts ist dann auch der Grund des
- * Icons, es gibt keinen Rahmen.
- *
- * Für maskable muss alles in den mittleren 80 % liegen: das größte Quadrat in
- * diesem Kreis hat die Kante 0,8/√2 ≈ 0,566. Dort liegt das Brett kleiner auf
- * farbigem Grund — anders geht es nicht, Android beschneidet dieses Icon auf
- * einen Kreis, und Ziffern in den Ecken wären weg.
+ * Der Grund füllt immer das ganze Icon — kein Rahmen, keine zweite Fläche.
+ * Unterschieden wird nur über `pad`, den Abstand des Gitters zur Kante.
  */
-function svg(size, span, theme) {
+function svg(size, pad01, theme) {
   const t = THEMES[theme];
-  const edge = size * span;
-  const org = (size - edge) / 2;
-  const pad = edge * PAD;
-  const side = edge - pad * 2;
+  const pad = size * pad01;
+  const side = size - pad * 2;
   const step = side / 3;
-  const lw = Math.max(edge * LINE, 0.8);       // unter ~107 px sonst unsichtbar
-  const at = i => org + pad + i * step;
+  const lw = Math.max(size * LINE, 0.8);       // unter ~107 px sonst unsichtbar
+  const at = i => pad + i * step;
 
-  let out = `<rect width="${size}" height="${size}" fill="${span < 1 ? t.outer : t.paper}"/>`;
-  if (span < 1) {
-    out += `<rect x="${org}" y="${org}" width="${edge}" height="${edge}"` +
-           ` rx="${edge * 0.06}" fill="${t.paper}"/>`;
-  }
+  let out = `<rect width="${size}" height="${size}" fill="${t.paper}"/>`;
 
   let lines = `<g stroke="${t.line}" stroke-width="${lw}">`;
   for (let i = 1; i < 3; i++) {
-    lines += `<path d="M${at(i)} ${org + pad} V${org + pad + side}"/>`;
-    lines += `<path d="M${org + pad} ${at(i)} H${org + pad + side}"/>`;
+    lines += `<path d="M${at(i)} ${pad} V${pad + side}"/>`;
+    lines += `<path d="M${pad} ${at(i)} H${pad + side}"/>`;
   }
   out += lines + '</g>';
 
@@ -124,12 +129,12 @@ ${out}
 }
 
 const SHAPES = [
-  { name: 'icon-192', size: 192, span: 1 },
-  { name: 'icon-512', size: 512, span: 1 },
-  { name: 'icon-maskable-512', size: 512, span: 0.56 },
-  { name: 'apple-touch-icon', size: 180, span: 1 },
-  { name: 'favicon-32', size: 32, span: 1 },
-  { name: 'favicon-16', size: 16, span: 1 }
+  { name: 'icon-192', size: 192, pad: PAD },
+  { name: 'icon-512', size: 512, pad: PAD },
+  { name: 'icon-maskable-512', size: 512, pad: PAD_MASKABLE },
+  { name: 'apple-touch-icon', size: 180, pad: PAD },
+  { name: 'favicon-32', size: 32, pad: PAD },
+  { name: 'favicon-16', size: 16, pad: PAD }
 ];
 
 const JOBS = [];
@@ -149,7 +154,7 @@ for (const j of JOBS) {
   const page = await browser.newPage({ viewport: { width: j.size, height: j.size }, deviceScaleFactor: 1 });
   await page.setContent(
     `<style>html,body{margin:0;padding:0;width:${j.size}px;height:${j.size}px;overflow:hidden}` +
-    `svg{display:block}</style>` + svg(j.size, j.span, j.theme)
+    `svg{display:block}</style>` + svg(j.size, j.pad, j.theme)
   );
   await page.screenshot({ path: join(OUT, j.file), omitBackground: false });
   await page.close();
