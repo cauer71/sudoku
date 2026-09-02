@@ -502,6 +502,41 @@ Ohne die Einstellung *Falsche Eingaben sofort markieren* kennt das Spiel kein
 „falsch" gegenüber der Lösung. Dann werden nur Regelverstöße angezeigt: beide
 Seiten einer doppelten Zahl werden rot hinterlegt, ohne Rahmen und ohne Blitzen.
 
+## Ohne Internet spielen
+
+Ja — auf dem iPhone wie auf Android. Bedingung ist nur, dass die Seite **einmal
+mit Internet** geöffnet wurde: erst dann kann der Service Worker die 17 Dateien
+ablegen. Danach braucht das Spiel kein Netz mehr.
+
+Am besten über den Startbildschirm: iPhone → Teilen-Symbol → *Zum
+Home-Bildschirm*, Android → Menü ⋮ → *App installieren*. Im Browser allein geht
+es auch, siehe die Einschränkung unten.
+
+Warum es überhaupt geht: das Spiel lädt nichts von außen — keine Schrift, kein
+Skript, kein Bild von einem fremden Server; die Regel in `_headers` schreibt das
+fest. Rätsel werden im Gerät erzeugt, der Spielstand liegt im lokalen Speicher.
+Das einzige, was Netz braucht, ist die gemeinsame Rangliste, und die ist bewusst
+folgenlos: `fetch` mit `.catch` — „keine Rangliste ist kein Fehler". Ohne Netz
+bleiben die örtlichen Bestzeiten.
+
+**Die Einschränkung auf iOS.** WebKit löscht Speicher, den eine Webseite selbst
+beschrieben hat — also Cache und Spielstand —, wenn die Seite sieben Tage nicht
+benutzt wurde. Für Web-Apps auf dem Startbildschirm hat Apple eine Ausnahme
+angegeben, das hat sich zwischen den iOS-Fassungen aber schon geändert. Sichere
+Gewohnheit: die App gelegentlich mit Internet öffnen. Dann ist der Cache frisch
+und der Spielstand bleibt.
+
+**Was hier nicht geprüft werden konnte.** Die Offline-Prüfungen laufen in
+Chromium. WebKit — die Engine des iPhones — lässt sich in dieser Umgebung nicht
+installieren, der Download wird gesperrt. Geprüft ist also der Mechanismus, nicht
+Safaris Umsetzung davon. Service Worker und Cache Storage unterstützt iOS seit
+11.3; das Verfahren ist Standard und benutzt nichts Besonderes.
+
+Geprüft wird mit abgeschaltetem Netz: Start über `/`, über `?julia=1` (die
+Startadresse der Rosé-Fassung), über `?julia=0` und über eine unbekannte Abfrage,
+dazu `julia.html`, ein Icon aus dem Cache und ein vollständiger Spielzug — alles
+ohne JS-Fehler.
+
 ## Spielstand
 
 Das laufende Spiel wird auf dem Gerät gespeichert und beim nächsten Aufruf
@@ -535,7 +570,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.7`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.8`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 

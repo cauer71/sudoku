@@ -10,13 +10,13 @@
  *   - Alles andere (Icons, Manifest): erst Cache, dann Netz.
  */
 
-var VERSION = 'sudoku-2.7';        // dieselbe Nummer wie APP_VERSION in index.html
+var VERSION = 'sudoku-2.8';        // dieselbe Nummer wie APP_VERSION in index.html
 
 // Icons werden mit "immutable" und einem Jahr Haltbarkeit ausgeliefert. Damit
 // eine neue Zeichnung überhaupt ankommt, tragen ihre Adressen die Fassung:
 // gleiche Datei, neue Adresse, also ein neuer Eintrag im Cache des Browsers.
 // Diese Marke muss zu APP_VERSION passen — tools/collect.mjs prüft das.
-var ICON_V = '?v=2.7';
+var ICON_V = '?v=2.8';
 
 var ICONS = [
   'icon-192.png',
@@ -76,8 +76,33 @@ self.addEventListener('fetch', function (event) {
         caches.open(VERSION).then(function (c) { c.put(req, copy); }).catch(function () {});
         return res;
       }).catch(function () {
-        return caches.match(req).then(function (hit) {
-          return hit || caches.match('./index.html') || caches.match('./');
+        /* Ohne Netz: erst die genaue Adresse, dann die Startseite.
+
+           Vorher stand hier
+             hit || caches.match('./index.html') || caches.match('./')
+           und das ist als Kette falsch: caches.match() gibt ein Versprechen
+           zurück, und ein Versprechen ist immer „wahr". Der dritte Zweig war
+           damit unerreichbar, und fehlte index.html im Cache, löste das
+           Versprechen auf undefined auf — respondWith bekäme dann nichts.
+           Möglich ist das, weil die Installation einzelne Dateien bewusst
+           überspringt, wenn sie nicht zu holen sind.
+
+           Ehrlich dazu: ein Verhaltensunterschied ließ sich nicht nachweisen.
+           Playwrights setOffline sperrt das Netz, aber Chromes eigener
+           HTTP-Cache beliefert Navigationen weiter — damit ist der
+           Service-Worker-Pfad im Test nicht zu isolieren. Geändert ist es als
+           Logikfehler, nicht als belegter Fehlerfall.
+
+           ignoreSearch ist ebenso vorsorglich: die installierte Rosé-Fassung
+           startet über ./?julia=1, und ohne diese Angabe passt der Eintrag für
+           ./ nicht dazu. Der Rückfall auf index.html trägt diesen Fall auch,
+           aber direkt ist direkt. */
+        return caches.match(req, { ignoreSearch: true }).then(function (hit) {
+          return hit || caches.match('./index.html');
+        }).then(function (hit) {
+          return hit || caches.match('./');
+        }).then(function (hit) {
+          return hit || Response.error();
         });
       })
     );
