@@ -364,9 +364,9 @@ Spiel unverändert bedienbar.
 
 „Vibriert nicht" hat mindestens vier Ursachen, und keine davon ist am Bildschirm
 zu erkennen: keine Schnittstelle, abgelehnter Aufruf, Systemeinstellung aus,
-Lautlos-Modus. Deshalb gibt es im Menü **Vibration testen** — der Knopf löst sie
-aus und schreibt darunter, was daraus wurde. `navigator.vibrate` liefert zurück,
-ob der Aufruf angenommen wurde:
+Lautlos-Modus. Deshalb schreibt der Schalter beim Einschalten unter sich, was
+daraus wurde — man spürt es einmal und liest, ob es angekommen ist.
+`navigator.vibrate` liefert zurück, ob der Aufruf angenommen wurde:
 
 | | Rückmeldung |
 |---|---|
@@ -380,6 +380,10 @@ liegt hinter dem geöffneten Menü. Die Rückmeldung war also genau dann unsicht
 wenn man sie braucht. Sie steht jetzt im Blatt, direkt unter dem Schalter, und
 die `haptik`-Prüfung stellt mit `elementFromPoint` sicher, dass sie dort auch
 frei liegt.
+
+Ein eigener Knopf „Vibration testen" stand zwischendurch darunter, ist aber auf
+Wunsch wieder weg: der Schalter genügt. Die Prüfung achtet darauf, dass er nicht
+zurückkommt.
 
 ## Beim Gewinnen
 
@@ -494,7 +498,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.5`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.6`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 

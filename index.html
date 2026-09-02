@@ -13,9 +13,9 @@
      angemeldet. -->
 <meta name="theme-color" content="#dfe4ee">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.5">
-<link rel="icon" href="icons/favicon-32.png?v=2.5" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16.png?v=2.5" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2.6">
+<link rel="icon" href="icons/favicon-32.png?v=2.6" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=2.6" sizes="16x16" type="image/png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1063,7 +1063,6 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
         <label class="switch-row"><span>Symmetrisches Muster <span class="switch-hint">wie im Rätselheft</span></span><input type="checkbox" id="setSym" checked><span class="track"></span></label>
         <label class="switch-row"><span>Julia-Modus <span class="switch-hint">rosa Farben</span></span><input type="checkbox" id="setJulia"><span class="track"></span></label>
         <label class="switch-row"><span>Vibration <span class="switch-hint">beim Tippen</span></span><input type="checkbox" id="setHaptik" checked><span class="track"></span></label>
-        <button class="btn-text" id="btnHaptik" type="button">Vibration testen</button>
         <p class="sheet-note" id="haptikNote" role="status" aria-live="polite">Spürt man nichts,
         liegt es meist am Gerät: Vibration beim Tippen muss in den Systemeinstellungen
         an sein, und im Lautlos-Modus unterdrücken manche Geräte sie. Auf dem iPhone
@@ -1128,7 +1127,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
      dasselbe wie der Cache.
      ========================================================== */
 
-  var APP_VERSION = "2.5";
+  var APP_VERSION = "2.6";
   $("#appVersion").textContent = "Version " + APP_VERSION;
 
   /* ==========================================================
@@ -2902,16 +2901,20 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
   installState();
 
   /* ----------------------------------------------------------
-     Vibration prüfen
+     Rückmeldung zur Vibration
      ----------------------------------------------------------
      „Vibriert nicht" hat mindestens vier Ursachen — keine Schnittstelle,
      abgelehnter Aufruf, Systemeinstellung aus, Lautlos-Modus — und keine davon
      ist am Bildschirm zu sehen. navigator.vibrate liefert zurück, ob der Aufruf
      angenommen wurde; das steht hier.
 
+     Ein eigener Knopf „Vibration testen" stand hier zwischendurch, ist aber auf
+     Wunsch wieder weg: der Schalter selbst genügt. Wer ihn einschaltet, spürt es
+     einmal und liest darunter, was daraus wurde.
+
      Die Rückmeldung gehört ins Blatt, nicht in die Zeile unter dem Spielfeld:
      die liegt hinter dem geöffneten Menü und ist genau dann unsichtbar, wenn man
-     sie braucht. Derselbe Fehler wie beim ersten Versuch.
+     sie braucht.
      ---------------------------------------------------------- */
 
   var HAPTIK_HINWEIS = "Spürt man nichts, liegt es meist am Gerät: Vibration beim "
@@ -2923,7 +2926,7 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 
   function haptikSagen(text) { if (haptikNote) haptikNote.textContent = text; }
 
-  function haptikPruefen() {
+  function haptikMelden() {
     if (!settings.haptik) {
       haptikSagen("Der Schalter steht auf aus — dann vibriert nichts. " + HAPTIK_HINWEIS);
       return;
@@ -2943,10 +2946,8 @@ button.stat:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
     }
   }
 
-  $("#btnHaptik").addEventListener("click", haptikPruefen);
-
   bindSwitch("#setHaptik", "haptik", function () {
-    if (settings.haptik) haptikPruefen();
+    if (settings.haptik) haptikMelden();
     else haptikSagen("Vibration aus. " + HAPTIK_HINWEIS);
     say(settings.haptik ? "Vibration an." : "Vibration aus.");
   });
