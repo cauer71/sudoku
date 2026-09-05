@@ -128,22 +128,46 @@ ${out}
    zu Chromes Verkleinerung noch dazu. Das Gitter füllte nur ~73 % des
    sichtbaren Plättchens.
 
-   Die Lösung ist die des Play-Store-Sudokus, in eine einzige Datei gebracht:
-   die beiden inneren Gitterlinien laufen über die VOLLE Leinwand hinaus, es
-   gibt keine äußeren Linien — den Rand macht die Maske. Der Grund ist
-   vollflächig deckend, die Ziffern werden größer.
+   Und hier lag der Fehler der vorigen Fassung: sie hat aus „sichtbar bleiben
+   87,5 % des Bildes" ein QUADRAT gemacht und das Feld auf 64…960 gelegt. Die
+   Maske ist aber ein Squircle — sie schneidet die Ecken. Die vier Eckziffern
+   (5, 7, 9, 2) liegen genau auf den Diagonalen, wo jede Maske am meisten
+   wegnimmt, und wurden angeschnitten.
 
-   Zahlen für 1024 px, hier als Anteil der Kantenlänge:
-     Feldkante 64 → 0,0625        Zellkante 298,67 → 0,291667
-     Linien bei 362,67 und 661,33 (= Feldkante + 1 bzw. 2 Zellen)
-     Strichbreite 6,04 → 0,005898  Ziffernhöhe 200 → 0,195313
+   Verbindlich ist die Sicherheitszone: ein Kreis um die Mitte mit 80 % der
+   Kantenlänge, also Radius 0,4 — Chromes Montage auf 76,2 % bildet Androids
+   66-dp-Kreis genau darauf ab. Was darin liegt, ist auf JEDER Maske ganz zu
+   sehen, auch auf einer runden (Pixel). Was draußen liegt, darf beschnitten
+   werden.
+
+   Daraus die Aufteilung:
+     · Grund und Gitterlinien laufen weiter über die volle Leinwand. Sie
+       DÜRFEN beschnitten werden — den Rand macht die Maske, wie beim Vorbild.
+     · Die Ziffern müssen ganz in den Kreis. Das begrenzt sie: eine Eckziffer
+       sitzt in beiden Achsen eine Zellkante von der Mitte entfernt, ihre
+       äußere Ecke also 1,41 Zellkanten plus ihre halbe Höhe und Breite.
+     · Damit die Zellen dabei gleich groß bleiben, werden vier Linien je
+       Richtung gezogen statt zwei: das Feld bekommt seinen Rahmen, und die
+       Linien laufen darüber hinaus bis zur Kante.
+
+   Zahlen für 1024 px, Anteile der Kantenlänge:
+     Zellkante 214 → 0,208984     Linien bei 191, 405, 619, 833
+     Strichbreite 6,04 → 0,005898 Ziffernhöhe 173 → 0,168945
+
+   Die Ziffernhöhe ist keine Wahl, sondern das Ergebnis: am fertigen PNG
+   gemessen liegt der äußerste Ziffernpunkt bei 39,55 % — knapp innerhalb der
+   40 %, mitsamt seinem Kantenglättungssaum. Mehr ginge nur, wenn die Ziffern
+   noch enger in ihren Zellen säßen; bei 173 zu 214 füllen sie schon 81 % der
+   Zellhöhe, das Vorbild bleibt darunter. Die Prüfreihe misst es nach.
 */
 const M = {
-  feld:   64 / 1024,
-  zelle:  298.667 / 1024,
+  zelle:  214 / 1024,
   strich: 6.04 / 1024,
-  ziffer: 200 / 1024
+  ziffer: 173 / 1024
 };
+
+// Sicherheitszone: Radius als Anteil der Kantenlänge.
+const SICHER = 0.4;
 
 /* Roboto, wie in der App.
 
@@ -167,16 +191,20 @@ const ROBOTO = readFileSync(new URL('./schrift/roboto-regular-latin.woff2', impo
 function svgMaskable(size, theme) {
   const t = THEMES[theme];
   const zelle = size * M.zelle;
-  const at = i => size * M.feld + i * zelle;          // linke Kante der Spalte i
-  const mitte = i => at(i) + zelle / 2;
+  const m = size / 2;                                  // Mitte der Leinwand
+  const mitte = i => m + (i - 1) * zelle;              // Mitte der Zelle i (0..2)
   const fs = (size * M.ziffer) / ROBOTO_HOEHE;
 
   let out = `<rect width="${size}" height="${size}" fill="${t.paper}"/>`;
 
-  // Nur die beiden inneren Linien, dafür über die ganze Leinwand.
+  // Vier Linien je Richtung — die beiden inneren und der Rahmen des Feldes —,
+  // alle über die ganze Leinwand. Der Rahmen hält die Zellen gleich groß, das
+  // Überstehen nimmt dem Feld das Schwebende: das Gitter geht weiter, die
+  // Maske schneidet es ab.
   let lines = `<g stroke="${t.line}" stroke-width="${size * M.strich}">`;
-  for (let i = 1; i < 3; i++) {
-    lines += `<path d="M${at(i)} 0 V${size}"/><path d="M0 ${at(i)} H${size}"/>`;
+  for (const d of [-1.5, -0.5, 0.5, 1.5]) {
+    const at = m + d * zelle;
+    lines += `<path d="M${at} 0 V${size}"/><path d="M0 ${at} H${size}"/>`;
   }
   out += lines + '</g>';
 
