@@ -36,7 +36,7 @@
  * Aufruf: node tools/make-icons.mjs   (braucht playwright, nur zum Erzeugen)
  */
 import { chromium } from 'playwright';
-import { mkdirSync, statSync } from 'node:fs';
+import { mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -65,22 +65,6 @@ const DIGITS = [
 
 const PAD = 0.07;         // Abstand des Gitters zur Kante, Anteil der Kantenlänge
 
-/**
- * Für maskable ein größerer Abstand — und sonst nichts.
- *
- * Erst lag dort das ganze Brett auf 56 % verkleinert auf farbigem Grund, weil
- * „Inhalt in den mittleren 80 %" als „das Quadrat muss in den Kreis passen"
- * gelesen war. Das ergab den breiten blauen Ring, den Android beim Installieren
- * zeigt. Verlangt ist aber nur, dass nichts Wichtiges beschnitten wird: der
- * Grund darf bis an die Kante laufen, allein die Tinte muss im Kreis liegen.
- *
- * Maßgeblich ist die Ecke der äußeren Ziffer. Sie sitzt bei 0,247 der Zelle
- * waagrecht (halbe Ziffernbreite) und 0,16 senkrecht (halbe Ziffernhöhe); mit
- * 0,18 Rand liegt sie 0,391 von der Mitte, der sichere Radius ist 0,4. Die
- * icons-Prüfung rechnet das am fertigen Bild nach, statt dieser Rechnung zu
- * glauben.
- */
-const PAD_MASKABLE = 0.18;
 const LINE = 0.0075;      // Linienstärke
 const SIZE = 0.92;        // Schriftgröße, Anteil der Feldbreite → Ziffer ~68 % hoch
 
@@ -128,10 +112,89 @@ ${out}
 </svg>`;
 }
 
+/* ==========================================================
+   maskable — eigene Geometrie
+   ==========================================================
+   Am Gerät gemessen (zwei Galaxy, per adb), nicht hergeleitet:
+
+     · Chrome montiert ein maskable-Icon IMMER auf 76,2 % der
+       Adaptive-Icon-Leinwand, zentriert, mit weißem Untergrund. Belegt an vier
+       installierten WebAPKs. Eine höher aufgelöste Quelldatei ändert daran
+       nichts — 1024 statt 512 bringt keine Größe.
+     · One UI zeigt davon die mittleren 66,7 % als Squircle. Sichtbar bleiben
+       also 66,7/76,2 = 87,5 % des Bildes, je Seite werden 6,25 % beschnitten.
+
+   Daraus folgt, warum die vorige Fassung klein wirkte: 18 % eigener Rand kamen
+   zu Chromes Verkleinerung noch dazu. Das Gitter füllte nur ~73 % des
+   sichtbaren Plättchens.
+
+   Die Lösung ist die des Play-Store-Sudokus, in eine einzige Datei gebracht:
+   die beiden inneren Gitterlinien laufen über die VOLLE Leinwand hinaus, es
+   gibt keine äußeren Linien — den Rand macht die Maske. Der Grund ist
+   vollflächig deckend, die Ziffern werden größer.
+
+   Zahlen für 1024 px, hier als Anteil der Kantenlänge:
+     Feldkante 64 → 0,0625        Zellkante 298,67 → 0,291667
+     Linien bei 362,67 und 661,33 (= Feldkante + 1 bzw. 2 Zellen)
+     Strichbreite 6,04 → 0,005898  Ziffernhöhe 200 → 0,195313
+*/
+const M = {
+  feld:   64 / 1024,
+  zelle:  298.667 / 1024,
+  strich: 6.04 / 1024,
+  ziffer: 200 / 1024
+};
+
+/* Roboto, wie in der App.
+
+   Die Ziffernhöhe ist die Versalhöhe der Schrift: 1456 von 2048 Einheiten,
+   also 0,7109 der Schriftgröße — Ziffern reichen in Roboto genau bis dorthin.
+   Bewusst der Schriftwert und nicht mein erster Messwert (0,665): den hatte ich
+   mit einer Schwelle über gerasterten Bildpunkten genommen, und der hängt davon
+   ab, wie viel Kantenglättung man noch mitzählt. Die Vorgabe „200 px" meint die
+   Höhe der Ziffer, nicht die ihres Weichzeichnerrandes.
+
+   Der zweite Wert setzt die Ziffer auf die Zellmitte: die Grundlinie liegt um
+   die halbe Versalhöhe unter der Mitte. Kein dominant-baseline, dessen Versatz
+   fällt je Schrift anders aus.
+
+   Die maskable-Prüfung misst am fertigen PNG nach, mit einer Schwelle bei
+   halber Deckung — das ist die Kante der Ziffer. */
+const ROBOTO_HOEHE = 1456 / 2048;
+const ROBOTO_MITTE = ROBOTO_HOEHE / 2;
+const ROBOTO = readFileSync(new URL('./schrift/roboto-regular-latin.woff2', import.meta.url)).toString('base64');
+
+function svgMaskable(size, theme) {
+  const t = THEMES[theme];
+  const zelle = size * M.zelle;
+  const at = i => size * M.feld + i * zelle;          // linke Kante der Spalte i
+  const mitte = i => at(i) + zelle / 2;
+  const fs = (size * M.ziffer) / ROBOTO_HOEHE;
+
+  let out = `<rect width="${size}" height="${size}" fill="${t.paper}"/>`;
+
+  // Nur die beiden inneren Linien, dafür über die ganze Leinwand.
+  let lines = `<g stroke="${t.line}" stroke-width="${size * M.strich}">`;
+  for (let i = 1; i < 3; i++) {
+    lines += `<path d="M${at(i)} 0 V${size}"/><path d="M0 ${at(i)} H${size}"/>`;
+  }
+  out += lines + '</g>';
+
+  for (const [col, row, ch, own] of DIGITS) {
+    out += `<text x="${mitte(col)}" y="${mitte(row) + fs * ROBOTO_MITTE}"` +
+           ` fill="${own ? t.own : INK}" font-family="Roboto" font-size="${fs}"` +
+           ` font-weight="400" text-anchor="middle">${ch}</text>`;
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+${out}
+</svg>`;
+}
+
 const SHAPES = [
   { name: 'icon-192', size: 192, pad: PAD },
   { name: 'icon-512', size: 512, pad: PAD },
-  { name: 'icon-maskable-512', size: 512, pad: PAD_MASKABLE },
+  { name: 'icon-maskable-512', size: 512, maskable: true },
   { name: 'apple-touch-icon', size: 180, pad: PAD },
   { name: 'favicon-32', size: 32, pad: PAD },
   { name: 'favicon-16', size: 16, pad: PAD }
@@ -152,10 +215,15 @@ const browser = await chromium.launch({
 
 for (const j of JOBS) {
   const page = await browser.newPage({ viewport: { width: j.size, height: j.size }, deviceScaleFactor: 1 });
+  const schrift = j.maskable
+    ? `@font-face{font-family:'Roboto';font-style:normal;font-weight:400;` +
+      `src:url(data:font/woff2;base64,${ROBOTO}) format('woff2')}`
+    : '';
   await page.setContent(
-    `<style>html,body{margin:0;padding:0;width:${j.size}px;height:${j.size}px;overflow:hidden}` +
-    `svg{display:block}</style>` + svg(j.size, j.pad, j.theme)
+    `<style>${schrift}html,body{margin:0;padding:0;width:${j.size}px;height:${j.size}px;overflow:hidden}` +
+    `svg{display:block}</style>` + (j.maskable ? svgMaskable(j.size, j.theme) : svg(j.size, j.pad, j.theme))
   );
+  if (j.maskable) await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: join(OUT, j.file), omitBackground: false });
   await page.close();
   console.log(`${j.file.padEnd(30)} ${j.size}×${j.size}  ${statSync(join(OUT, j.file)).size} Bytes`);

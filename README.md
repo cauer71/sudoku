@@ -160,35 +160,63 @@ Größen: 192, 512 (`any`), 512 (`maskable`), 180 für iOS, dazu 32 und 16 als
 Favicon. Erzeugt mit `node tools/make-icons.mjs` (braucht Playwright, nur zum
 Erzeugen).
 
-#### maskable: „mittlere 80 %" heißt nicht, das Bild zu schrumpfen
+#### maskable: randfuellend, weil Chrome ohnehin verkleinert
 
-Android beschneidet das maskable-Icon auf eine eigene Form, im schlimmsten Fall
-einen Kreis über die mittleren 80 %. Ich hatte das erst gelesen als „das ganze
-Quadrat muss in den Kreis passen" und das Brett auf 56 % verkleinert, den Rest
-mit der Markenfarbe gefüllt. Ergebnis: der breite farbige Ring, den Android beim
-Installieren zeigte — und der gefiel niemandem.
+Am Geraet gemessen (zwei Galaxy, per adb), nicht hergeleitet:
 
-Verlangt ist nur, dass **nichts Wichtiges beschnitten** wird. Der Grund darf bis
-an die Kante laufen; allein die Tinte muss im Kreis liegen. maskable und
-normales Icon unterscheiden sich deshalb nur noch im Abstand des Gitters zur
-Kante: 18 % statt 7 %.
+- Chrome montiert ein maskable-Icon **immer auf 76,2 %** der
+  Adaptive-Icon-Leinwand, zentriert, mit weissem Untergrund darunter. Belegt an
+  vier installierten WebAPKs, darunter eine mit 1000x1000-Quellen — **eine hoeher
+  aufgeloeste Datei aendert die Groesse nicht.**
+- One UI zeigt davon die mittleren 66,7 % als Squircle. Sichtbar bleiben also
+  66,7/76,2 = 87,5 % des Bildes, je Seite werden 6,25 % beschnitten.
 
-Maßgeblich ist die Ecke der äußeren Ziffer — waagrecht 0,247 der Zelle (halbe
-Ziffernbreite), senkrecht 0,16 (halbe Ziffernhöhe). Der Rechnung wird aber nicht
-geglaubt: die `maskable`-Prüfung tastet die fertigen PNG ab und misst, wie weit
-die äußerste Farbabweichung vom Grund von der Mitte entfernt liegt.
+Damit erklaert sich, warum die Vorgaengerfassung klein wirkte: zu Chromes
+Verkleinerung kamen 18 % eigener Rand. Nachgemessen fuellte ihr Gitter nur
+**73,5 %** des sichtbaren Plaettchens.
 
-| gemessen | |
+Die Loesung ist die des Play-Store-Sudokus, in eine einzige Datei gebracht: dort
+liegen die Gitterlinien im `background`-Layer und laufen ueber die Leinwand
+hinaus, nur die Ziffern sitzen im beschneidbaren `foreground`. Ein einzelnes PNG
+kann das nicht trennen, aber es kann dasselbe Bild ergeben — **die beiden inneren
+Linien laufen ueber die volle Leinwand, aeussere gibt es nicht.** Den Rand macht
+die Maske. Nachgemessen fuellt das Gitter jetzt 100 % des sichtbaren Plaettchens.
+
+Masse fuer 1024 px, im Erzeuger als Anteil der Kantenlaenge:
+
+| | |
 |---|---|
-| maskable | weiteste Tinte bei 0,386 — erlaubt sind 0,400 |
-| | und mindestens 0,33, damit das Motiv den Kreis auch nutzt |
-| normal | 0,518 — die werden nicht beschnitten und dürfen mehr füllen |
-| beide | Grund an allen Kanten gleich der Feldfarbe, also kein Ring |
+| Grund | vollflaechig, deckend bis in die Ecken, kein Alpha |
+| sichtbares 3x3-Feld | 64 ... 960 px, Zellkante 298,67 px |
+| innere Linien | bei 362,67 und 661,33 px, gezeichnet ueber 0 ... 1024 |
+| Strichbreite | 6,04 px |
+| Ziffernhoehe | 200 px = 19,5 % der Bildhoehe (vorher 14,3 %) |
+| Zellzentren | 213,33 / 512 / 810,67 px in beiden Achsen |
 
-Die Adressen der Icons tragen die Fassungsnummer als `?v=…`. Cloudflare liefert
-`/icons/*` mit `immutable` und einem Jahr Haltbarkeit aus — eine neue Zeichnung
-unter der alten Adresse käme bei niemandem an, der die App schon hat.
-`npm run collect` bricht ab, wenn eine Icon-Adresse die Marke nicht trägt.
+Die Ziffernhoehe ist die **Versalhoehe** der Schrift (Roboto: 1456/2048 = 0,7109
+der Schriftgroesse), nicht die Ausdehnung der Kantenglaettung. Der Unterschied
+ist kein Haarspalten: mit einer Pixelschwelle gemessen kam ich auf 0,665 und das
+Icon wurde 7 % zu gross. Entsprechend misst die `maskable`-Pruefung mit einer
+Schwelle bei halber Deckung — das ist die Kante der Ziffer.
+
+Geprueft wird am fertigen PNG: Ecken deckend und in der Grundfarbe, Linien
+beruehren alle vier Raender, Ziffernhoehe 19,92 % (verlangt 19,5 % +/- 0,5),
+oberste Ziffernreihe beginnt bei 10,9 % (verlangt >= 10 %), und beide
+Farbfassungen setzen die Ziffern auf denselben Bildpunkt.
+
+**Der Preis, offen gesagt.** Ein randfuellendes Gitter heisst, dass die
+Eckziffern nahe an der Ecke sitzen: ihre aeussere Kante liegt bei 39,9 % der
+Leinwand vom Mittelpunkt. Ein Launcher mit **kreisrunder** Maske zeigt nur
+33,4 % und wuerde 5, 7, 9 und 2 an der Aussenkante anschneiden. Das laesst sich
+mit dieser Geometrie nicht vermeiden — auch nicht durch kleinere Ziffern, denn
+schon die Zellmitten liegen bei 20,8 %. One UI mit seinem Squircle reicht weiter
+und zeigt sie vollstaendig; auf den Testgeraeten ist es also in Ordnung.
+
+Die Schrift ist Roboto wie in der App, als
+`tools/schrift/roboto-regular-latin.woff2` im Projekt (Apache 2.0, nur zum
+Erzeugen, wird nicht ausgeliefert). Die nicht-maskable Icons sind unveraendert
+geblieben, samt ihrer bisherigen Schrift — sie werden fuer den
+Installationsdialog und die Favicons benutzt, nicht fuers Launcher-Icon.
 
 ### Zwei Icons zur Wahl
 
@@ -570,7 +598,7 @@ nächster Schritt vermerkt, aber nicht Teil von 1c.
 
 Die Nummer steht an zwei Stellen: als `APP_VERSION` in `index.html`, von wo aus
 sie ins Menü geschrieben wird, und im Cache-Namen des Service Workers
-(`sudoku-2.8`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
+(`sudoku-2.9`). Beim Erhöhen sind beide Stellen anzufassen — der Cache-Name
 muss sich ändern, damit installierte Fassungen die neuen Dateien holen, und die
 angezeigte Nummer soll dasselbe sagen wie der Cache.
 
