@@ -45,7 +45,10 @@ mkdirSync(OUT, { recursive: true });
 
 const THEMES = {
   //         Grund (Felder)  Gitterlinie  eigene Zahl
-  normal: { paper: '#e3e2e9', line: '#757780', own: '#2b5db0' },
+  // Blau liegt auf Weiß — so gewünscht, und es hebt sich auf dem
+  // Startbildschirm am deutlichsten ab. Rosé behält seine Tönung, sonst wären
+  // die beiden Fassungen auf dem Bildschirm kaum noch auseinanderzuhalten.
+  normal: { paper: '#ffffff', line: '#757780', own: '#2b5db0' },
   julia:  { paper: '#ecdcea', line: '#8a7688', own: '#a3418f' }
 };
 const INK = '#1a1b20';                 // Vorgaben, wie --on-surface im Spiel
