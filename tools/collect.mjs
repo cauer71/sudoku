@@ -14,7 +14,8 @@
  *
  * Kein Bauen, nur Kopieren: die App selbst bleibt unverändert.
  */
-import { cp, mkdir, readFile, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -104,4 +105,43 @@ if (missing.length) {
   process.exit(1);
 }
 
-console.log('dist/ zusammengestellt — ' + FILES.length + ' Dateien, Fassung ' + appVersion[1]);
+// Prüfsummen der eingebetteten Skripte in die Sicherheitsregel eintragen.
+//
+// Ohne das stünde dort 'unsafe-inline' — die Erlaubnis für jedes Skript, das
+// im Seitenquelltext auftaucht, gleich woher es stammt. Mit den Prüfsummen
+// läuft genau der Code, der beim Zusammenstellen in den Dateien stand; jede
+// nachträglich eingeschleuste Zeile hat eine andere Summe und wird vom Browser
+// nicht ausgeführt. Die Summen ändern sich mit jeder Änderung an den Dateien,
+// deshalb entstehen sie hier und stehen nicht von Hand in _headers.
+const HTML = FILES.filter(f => f.endsWith('.html'));
+const hashes = [];
+for (const rel of HTML) {
+  const text = await readFile(join(ROOT, rel), 'utf8');
+  // nur eingebettete Skripte; <script src=…> deckt 'self' ab
+  const blocks = [...text.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
+  if (!blocks.length) {
+    console.error(`${rel}: kein eingebettetes Skript gefunden — die Regel wäre zu streng.`);
+    process.exit(1);
+  }
+  for (const b of blocks) {
+    hashes.push(`'sha256-${createHash('sha256').update(b[1], 'utf8').digest('base64')}'`);
+  }
+}
+
+const headersDatei = join(DIST, '_headers');
+const headers = await readFile(headersDatei, 'utf8');
+// Ausdrücklich nur in der Regelzeile ersetzen — der Platzhalter kommt auch im
+// Kommentar darüber vor, und der soll lesbar bleiben.
+const gefuellt = headers.replace(
+  /(Content-Security-Policy:[^\n]*?)SKRIPT_HASHES/,
+  (_, kopf) => kopf + hashes.join(' ')
+);
+if (gefuellt === headers) {
+  console.error('_headers: SKRIPT_HASHES steht in keiner Content-Security-Policy-Zeile — ' +
+    'die Prüfsummen kämen nirgends an.');
+  process.exit(1);
+}
+await writeFile(headersDatei, gefuellt);
+
+console.log('dist/ zusammengestellt — ' + FILES.length + ' Dateien, Fassung ' + appVersion[1] +
+  ', ' + hashes.length + ' Skript-Prüfsummen');

@@ -38,5 +38,26 @@
     "html_handling": "auto-trailing-slash"
   },
 
+  // Ratenbegrenzung für /api/scores. Die Rangliste hat keine Konten — wer die
+  // Adresse kennt, kann senden. Prüfbar ist nur Form und Plausibilität, gegen
+  // schieres Draufhalten hilft das nicht. Diese Schranke schon.
+  //
+  // Gezählt wird je Cloudflare-Standort, nicht weltweit, und die Periode darf
+  // nur 10 oder 60 Sekunden sein — beides Vorgaben der Schnittstelle.
+  // Schreiben ist knapper bemessen als Lesen: ein Rätsel dauert Minuten, die
+  // Rangliste sieht man sich öfter an.
+  "ratelimits": [
+    {
+      "name": "SCHREIB_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 }
+    },
+    {
+      "name": "LESE_LIMIT",
+      "namespace_id": "1002",
+      "simple": { "limit": 60, "period": 60 }
+    }
+  ],
+
   "observability": { "enabled": true }
 }

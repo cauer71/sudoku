@@ -17,7 +17,20 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   X-Frame-Options: SAMEORIGIN
+  # Ein Jahr nur über HTTPS. Gilt für diesen Namen und seine Unternamen, nicht
+  # für Geschwister wie reise.auer.page. Bewusst ohne "preload": das trägt den
+  # Namen in eine Liste in den Browsern selbst ein und ist nur mühsam wieder
+  # loszuwerden.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  # Das Spiel braucht nichts davon. Die Regel schreibt es fest, damit es auch
+  # dann so bleibt, wenn später etwas dazukommt.
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
   # Die App lädt nichts von außen. Die Regel schreibt das fest: käme je eine
   # fremde Quelle hinzu, bricht sie sichtbar, statt still zu laden.
-  # 'unsafe-inline' ist nötig, weil Stil und Skript in der Datei stehen.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
+  #
+  # SKRIPT_HASHES ist ein Platzhalter — tools/collect.mjs setzt beim
+  # Zusammenstellen von dist/ die Prüfsummen der drei eingebetteten Skripte
+  # ein. Damit läuft nur genau der Code, der in den Dateien steht: eingefügtes
+  # Skript hätte eine andere Prüfsumme und würde nicht ausgeführt.
+  # Für Stil bleibt 'unsafe-inline' nötig — style="…" steht an vielen Stellen.
+  Content-Security-Policy: default-src 'self'; script-src 'self' SKRIPT_HASHES; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'
