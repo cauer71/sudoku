@@ -52,7 +52,7 @@ Wege laufen parallel aus denselben Dateien; kopiert wird nur, nicht gebaut.
 | `404.html` | eigene Fehlerseite (nutzt auch GitHub Pages) |
 | `tools/collect.mjs` | stellt `dist/` zusammen |
 | `worker/index.js` | beantwortet `/api/scores` für die Rangliste |
-| `schema.sql` | Tabelle der Rangliste (`sudoku_best` in der Datenbank `spiele`) |
+| `sudoku.sql` | Tabelle der Rangliste (`sudoku_best` in der Datenbank `spiele`) |
 
 ### Gemeinsame Rangliste (D1)
 
@@ -62,7 +62,7 @@ Worker schreibt per UPSERT und übernimmt nur, was schneller ist.
 
 ```bash
 # Schema auf die echte Datenbank anwenden (einmalig, folgenlos wiederholbar)
-npx wrangler d1 execute spiele --remote --file schema.sql
+npx wrangler d1 execute spiele --remote --file sudoku.sql
 ```
 
 **Warum eine geteilte Datenbank.** Früher hatte jedes Spiel seine eigene, hier
@@ -76,14 +76,21 @@ Der Präfix ist dabei kein Schönheitsthema. Zwei der Spiele hatten je eine
 Tabelle `zaehler` mit denselben Zeilen und hätten einander beim Zusammenlegen
 hochgezählt. Und Indexnamen sind in SQLite je **Datenbank** eindeutig, nicht je
 Tabelle — darum heisst der Index jetzt `sudoku_best_diff_sec` statt
-`idx_best_diff_sec`. Die Bestände wurden vor der Umstellung Zeile für Zeile
-gegen die Quelle geprüft; die alte Datenbank bleibt vorerst als Rückfall
-stehen.
+`idx_best_diff_sec`. Zu übernehmen war dabei nichts: die alte Tabelle war beim
+Umzug leer. Die alte Datenbank bleibt vorerst als Rückfall stehen.
+
+Aus demselben Grund heisst die Schemadatei `sudoku.sql` und nicht `schema.sql`:
+in einer geteilten Datenbank treffen die Schemadateien aller Spiele
+aufeinander, und `wrangler d1 migrations apply` merkt sich angewandte Dateien
+sogar in der Datenbank unter ihrem **Dateinamen** — zwei `schema.sql` wären
+dort dasselbe, das zweite würde stillschweigend übersprungen. Ein Dateiname je
+Spiel schliesst das aus.
 
 Das Schema wird hier weiterhin von Hand angewandt, es gibt bewusst kein
-`migrations/`-Verzeichnis: der Bestand ist eine einzige Tabelle. Jede Anweisung
-in `schema.sql` trägt `IF NOT EXISTS`, die Datei läuft also auch über die schon
-gefüllte Datenbank folgenlos durch.
+`migrations/`-Verzeichnis: der Bestand ist eine einzige Tabelle. `sudoku.sql`
+legt nur die Tabellen dieses Spiels an, und jede Anweisung darin trägt
+`IF NOT EXISTS` — die Datei läuft also auch über die schon gefüllte Datenbank
+folgenlos durch.
 
 Der Worker läuft nur für `/api/...`; statische Dateien liefert die Asset-Schicht
 weiterhin direkt aus, samt `_headers`. Unbekannte Pfade gibt der Worker an die

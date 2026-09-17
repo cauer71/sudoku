@@ -16,12 +16,22 @@
 -- der zweite gleichnamige Index beim Anlegen gescheitert.
 --
 -- Jede Anweisung trägt IF NOT EXISTS: das Schema steht in "spiele" bereits,
--- diese Datei muss also folgenlos durchlaufen können.
+-- diese Datei muss also folgenlos durchlaufen können. Sie legt ausschliesslich
+-- die Tabellen dieses Spiels an; was die anderen Spiele in "spiele" halten,
+-- steht in deren eigenen Dateien.
+--
+-- Auch der DATEINAME trägt den Spielnamen, aus demselben Grund wie die
+-- Tabelle: die Datenbank ist geteilt, also treffen die Schemadateien aller
+-- Spiele aufeinander — beim Anwenden von Hand auf dem Bildschirm, und bei
+-- "wrangler d1 migrations apply" sogar in der Datenbank, denn D1 merkt sich
+-- angewandte Migrationen unter ihrem DATEINAMEN. Zwei Spiele mit je einem
+-- "schema.sql" wären dort dasselbe, und das zweite würde stillschweigend
+-- übersprungen. Darum "sudoku.sql" und nicht "schema.sql".
 --
 -- Anwenden (von Hand; dieses Projekt hat bewusst kein migrations/-Verzeichnis,
 -- der Bestand ist eine einzige Tabelle):
---   entfernt:  npx wrangler d1 execute spiele --remote --file schema.sql
---   lokal:     npx wrangler d1 execute spiele --local  --file schema.sql
+--   entfernt:  npx wrangler d1 execute spiele --remote --file sudoku.sql
+--   lokal:     npx wrangler d1 execute spiele --local  --file sudoku.sql
 
 CREATE TABLE IF NOT EXISTS sudoku_best (
   name TEXT NOT NULL,
