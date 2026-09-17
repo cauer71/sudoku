@@ -13,11 +13,26 @@
   // Asset-Schicht direkt aus, ohne ihn aufzurufen.
   "main": "./worker/index.js",
 
+  // Eine Datenbank für mehrere Spiele, nicht mehr eine je Spiel.
+  //
+  // D1 zählt im Free-Tarif Datenbanken — zehn sind das Limit —, nicht
+  // Tabellen. Da hier etwa alle vier Tage ein neues Spiel entsteht, wäre das
+  // Kontingent in Wochen aufgebraucht gewesen; Tabellen dagegen kosten nichts.
+  // Also teilen sich die Spiele die Datenbank "spiele", und die Zugehörigkeit
+  // steht im Tabellennamen: aus "best" wurde "sudoku_best".
+  //
+  // Der Präfix ist nicht Zierde, sondern löst zwei echte Kollisionen: zwei
+  // Spiele hatten je eine Tabelle "zaehler" mit denselben Zeilen und hätten
+  // einander hochgezählt, und Indexnamen sind in SQLite je DATENBANK eindeutig,
+  // nicht je Tabelle — darum trägt auch der Index den Präfix.
+  //
+  // Das Binding heisst weiterhin DB: im Code steht nur env.DB, welche Datenbank
+  // daran hängt, entscheidet allein diese Datei.
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "sudoku-rangliste",
-      "database_id": "a5f5ca17-3d38-497c-881e-d1126b84649c"
+      "database_name": "spiele",
+      "database_id": "b82cb4dd-a307-4d2e-adb8-d20c98117ee2"
     }
   ],
 

@@ -52,18 +52,38 @@ Wege laufen parallel aus denselben Dateien; kopiert wird nur, nicht gebaut.
 | `404.html` | eigene Fehlerseite (nutzt auch GitHub Pages) |
 | `tools/collect.mjs` | stellt `dist/` zusammen |
 | `worker/index.js` | beantwortet `/api/scores` für die Rangliste |
-| `schema.sql` | Tabelle der Rangliste |
+| `schema.sql` | Tabelle der Rangliste (`sudoku_best` in der Datenbank `spiele`) |
 
 ### Gemeinsame Rangliste (D1)
 
-Datenbank `sudoku-rangliste` (Cloudflare D1, Region Westeuropa), gebunden als
-`DB`. Eine Zeile je Name und Grad, immer die beste Zeit; der Worker schreibt
-per UPSERT und übernimmt nur, was schneller ist.
+Datenbank `spiele` (Cloudflare D1, Region Westeuropa), gebunden als `DB`,
+Tabelle `sudoku_best`. Eine Zeile je Name und Grad, immer die beste Zeit; der
+Worker schreibt per UPSERT und übernimmt nur, was schneller ist.
 
 ```bash
-# Schema auf die echte Datenbank anwenden (einmalig)
-npx wrangler d1 execute sudoku-rangliste --remote --file schema.sql
+# Schema auf die echte Datenbank anwenden (einmalig, folgenlos wiederholbar)
+npx wrangler d1 execute spiele --remote --file schema.sql
 ```
+
+**Warum eine geteilte Datenbank.** Früher hatte jedes Spiel seine eigene, hier
+`sudoku-rangliste`. D1 zählt im Free-Tarif aber **Datenbanken** — zehn sind das
+Limit —, nicht Tabellen, und es entsteht etwa alle vier Tage ein neues Spiel;
+das Kontingent wäre in Wochen aufgebraucht gewesen. Tabellen kosten nichts,
+also liegen jetzt alle Spiele in `spiele`, und die Zugehörigkeit steht im
+Tabellennamen: aus `best` wurde `sudoku_best`.
+
+Der Präfix ist dabei kein Schönheitsthema. Zwei der Spiele hatten je eine
+Tabelle `zaehler` mit denselben Zeilen und hätten einander beim Zusammenlegen
+hochgezählt. Und Indexnamen sind in SQLite je **Datenbank** eindeutig, nicht je
+Tabelle — darum heisst der Index jetzt `sudoku_best_diff_sec` statt
+`idx_best_diff_sec`. Die Bestände wurden vor der Umstellung Zeile für Zeile
+gegen die Quelle geprüft; die alte Datenbank bleibt vorerst als Rückfall
+stehen.
+
+Das Schema wird hier weiterhin von Hand angewandt, es gibt bewusst kein
+`migrations/`-Verzeichnis: der Bestand ist eine einzige Tabelle. Jede Anweisung
+in `schema.sql` trägt `IF NOT EXISTS`, die Datei läuft also auch über die schon
+gefüllte Datenbank folgenlos durch.
 
 Der Worker läuft nur für `/api/...`; statische Dateien liefert die Asset-Schicht
 weiterhin direkt aus, samt `_headers`. Unbekannte Pfade gibt der Worker an die

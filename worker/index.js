@@ -6,6 +6,13 @@
  * /api/... und unbekannte Pfade, die an die Asset-Schicht zurückgegeben
  * werden, damit sie 404.html liefert.
  *
+ * Die Tabelle heisst "sudoku_best" und nicht "best", weil die Datenbank
+ * "spiele" mehreren Spielen gemeinsam gehört: D1 zählt im Free-Tarif
+ * Datenbanken (zehn) und nicht Tabellen, und es kommt etwa alle vier Tage ein
+ * Spiel dazu. Der Präfix hält die Bestände auseinander — ohne ihn hätten sich
+ * gleichnamige Tabellen zweier Spiele gegenseitig überschrieben. Am Binding
+ * ändert das nichts, das heisst weiterhin env.DB.
+ *
  * Zur Ehrlichkeit: eine öffentliche Rangliste ohne Konten lässt sich nicht
  * gegen Falscheinträge absichern. Wer die Adresse kennt, kann Zeiten senden.
  * Geprüft wird daher nur, was prüfbar ist: Form, Länge und Plausibilität —
@@ -83,7 +90,7 @@ function cleanName(raw) {
 async function listScores(env) {
   const { results } = await env.DB.prepare(
     'SELECT name, difficulty, seconds, mistakes, hints, updated_at' +
-    ' FROM best ORDER BY difficulty, seconds LIMIT 400'
+    ' FROM sudoku_best ORDER BY difficulty, seconds LIMIT 400'
   ).all();
 
   const byDiff = {};
@@ -120,14 +127,14 @@ async function submitScore(request, env) {
 
   // Nur übernehmen, wenn die Zeit besser ist als die gespeicherte.
   const res = await env.DB.prepare(
-    'INSERT INTO best (name, difficulty, seconds, mistakes, hints, updated_at)' +
+    'INSERT INTO sudoku_best (name, difficulty, seconds, mistakes, hints, updated_at)' +
     ' VALUES (?1, ?2, ?3, ?4, ?5, ?6)' +
     ' ON CONFLICT(name, difficulty) DO UPDATE SET' +
     '   seconds = excluded.seconds,' +
     '   mistakes = excluded.mistakes,' +
     '   hints = excluded.hints,' +
     '   updated_at = excluded.updated_at' +
-    ' WHERE excluded.seconds < best.seconds'
+    ' WHERE excluded.seconds < sudoku_best.seconds'
   ).bind(name, difficulty, seconds, clamp(body.mistakes), clamp(body.hints), new Date().toISOString()).run();
 
   const improved = !!(res.meta && res.meta.changes > 0);
